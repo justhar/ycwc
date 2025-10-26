@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { PDFParse } from "pdf-parse";
 import { AIService } from "../utils/ai-service.js";
 import { db } from "../db/db.js";
 import { universities } from "../db/schema.js";
@@ -63,12 +62,9 @@ const aiService = new AIService();
 // Profile autofill endpoint
 ai.post("/profile-autofill", async (c) => {
   try {
-    const formData = await c.req.formData();
+    const { cvText } = await c.req.json();
 
-    // Get the uploaded file
-    const file = formData.get("cv") as File;
-
-    if (!file || !(file instanceof File)) {
+    if (!cvText || typeof cvText !== "string") {
       return c.json(
         {
           success: false,
@@ -78,19 +74,8 @@ ai.post("/profile-autofill", async (c) => {
       );
     }
 
-    // Validate file type
-    if (file.type !== "application/pdf") {
-      return c.json(
-        {
-          success: false,
-          error: getLocalizedMessage(c, "invalidFileType"),
-        },
-        400
-      );
-    }
-
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate text length (approximate 10MB limit for text)
+    if (cvText.length > 10 * 1024 * 1024) {
       return c.json(
         {
           success: false,
@@ -100,17 +85,7 @@ ai.post("/profile-autofill", async (c) => {
       );
     }
 
-    // Convert file to buffer for pdf-parse
-    const fileBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(fileBuffer);
-
-    // Parse PDF content using ESM API
-    const parser = new PDFParse({ data: buffer });
-    const textResult = await parser.getText();
-    const pdfText = textResult.text;
-    await parser.destroy();
-
-    if (!pdfText.trim()) {
+    if (!cvText.trim()) {
       return c.json(
         {
           success: false,
@@ -121,7 +96,7 @@ ai.post("/profile-autofill", async (c) => {
     }
 
     // Extract profile data using AI
-    const analysisResult = await aiService.analyzeCVText(pdfText);
+    const analysisResult = await aiService.analyzeCVText(cvText);
     if (!analysisResult.success) {
       return c.json(
         {
@@ -145,28 +120,6 @@ ai.post("/profile-autofill", async (c) => {
         message: error.message,
         stack: error.stack,
       });
-
-      if (error.message.includes("Only PDF files are allowed")) {
-        console.log("❌ File type error");
-        return c.json(
-          {
-            success: false,
-            error: getLocalizedMessage(c, "invalidFileType"),
-          },
-          400
-        );
-      }
-
-      if (error.message.includes("File too large")) {
-        console.log("❌ File size error");
-        return c.json(
-          {
-            success: false,
-            error: getLocalizedMessage(c, "fileTooLarge"),
-          },
-          400
-        );
-      }
 
       if (error.message.includes("API key")) {
         console.log("❌ API key error");

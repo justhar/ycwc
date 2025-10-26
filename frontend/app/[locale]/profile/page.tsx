@@ -64,6 +64,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScholarshipCard from "@/components/ScholarshipCard";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { extractTextFromPDF } from "@/lib/pdf-utils";
 
 // Isolated Input Components
 interface ControlledInputProps {
@@ -610,14 +611,27 @@ export default function DashboardPage() {
 
       setIsAIProcessing(true);
 
-      try {
-        const formData = new FormData();
-        formData.append("cv", file);
+      const processingToast = toast.loading("Extracting text from PDF...", {
+        description: "This may take a few moments for large files",
+      });
 
+      try {
+        // Extract text from PDF using PDF.js
+        const pdfText = await extractTextFromPDF(file);
+
+        toast.dismiss(processingToast);
+        toast.loading("Analyzing CV with AI...", {
+          description: "Extracting profile information",
+        });
+
+        // Send extracted text to backend
         const response = await fetch(`${API_BASE_URL}/ai/profile-autofill`, {
           method: "POST",
           credentials: "include",
-          body: formData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ cvText: pdfText }),
         });
 
         const result = await response.json();
@@ -776,6 +790,7 @@ export default function DashboardPage() {
         );
       } finally {
         setIsAIProcessing(false);
+        toast.dismiss(); // Dismiss any remaining loading toasts
       }
 
       setFiles(files);
