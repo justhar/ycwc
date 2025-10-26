@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/db.js";
 import { users } from "../db/schema.js";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth.js";
+import { getLocalizedMessage, getLanguageFromHeader } from "../utils/i18n.js";
 
 const auth = new Hono();
 
@@ -10,25 +11,26 @@ const auth = new Hono();
 auth.post("/register", async (c) => {
   try {
     const { fullName, email, password } = await c.req.json();
+    const lang = getLanguageFromHeader(c);
 
     // Validate input
     if (!fullName || !email || !password) {
       return c.json(
-        { error: "Full name, email and password are required" },
+        { error: getLocalizedMessage("missingRequiredFields", "errors", lang) },
         400
       );
     }
 
     if (password.length < 6) {
       return c.json(
-        { error: "Password must be at least 6 characters long" },
+        { error: getLocalizedMessage("passwordTooShort", "errors", lang) },
         400
       );
     }
 
     if (fullName.trim().length < 2) {
       return c.json(
-        { error: "Full name must be at least 2 characters long" },
+        { error: getLocalizedMessage("fullNameTooShort", "errors", lang) },
         400
       );
     }
@@ -40,7 +42,10 @@ auth.post("/register", async (c) => {
       .where(eq(users.email, email));
 
     if (existingUser.length > 0) {
-      return c.json({ error: "User already exists with this email" }, 409);
+      return c.json(
+        { error: getLocalizedMessage("emailAlreadyExists", "errors", lang) },
+        409
+      );
     }
 
     // Hash password and create user
@@ -64,7 +69,7 @@ auth.post("/register", async (c) => {
 
     return c.json(
       {
-        message: "User registered successfully",
+        message: getLocalizedMessage("signupSuccessful", "success", lang),
         user: {
           id: newUser[0].id,
           fullName: newUser[0].fullName,
@@ -84,37 +89,51 @@ auth.post("/register", async (c) => {
 auth.post("/login", async (c) => {
   try {
     const { email, password } = await c.req.json();
+    const lang = getLanguageFromHeader(c);
 
     // Validate input
     if (!email || !password) {
-      return c.json({ error: "Email and password are required" }, 400);
+      return c.json(
+        { error: getLocalizedMessage("missingRequiredFields", "errors", lang) },
+        400
+      );
     }
 
     // Find user by email
     const user = await db.select().from(users).where(eq(users.email, email));
 
     if (user.length === 0) {
-      return c.json({ error: "Invalid email or password" }, 401);
+      return c.json(
+        { error: getLocalizedMessage("invalidCredentials", "errors", lang) },
+        401
+      );
     }
 
     // Verify password
     const isValidPassword = await comparePassword(password, user[0].password);
 
     if (!isValidPassword) {
-      return c.json({ error: "Invalid email or password" }, 401);
+      return c.json(
+        { error: getLocalizedMessage("invalidCredentials", "errors", lang) },
+        401
+      );
     }
 
     // Generate JWT token
     const token = generateToken(user[0].id);
 
     return c.json({
-      message: "Login successful",
+      message: getLocalizedMessage("loginSuccessful", "success", lang),
       user: { id: user[0].id, email: user[0].email },
       token,
     });
   } catch (error) {
     console.error("Login error:", error);
-    return c.json({ error: "Internal server error" }, 500);
+    const lang = getLanguageFromHeader(c);
+    return c.json(
+      { error: getLocalizedMessage("internalServerError", "errors", lang) },
+      500
+    );
   }
 });
 

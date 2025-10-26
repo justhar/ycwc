@@ -1,6 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import {
+  getUserProfile,
+  updateUserProfile,
+  updateUserInfo,
+  ProfileData,
+  UserProfile,
+} from "@/lib/api";
 
 interface User {
   id: number;
@@ -11,6 +24,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  profile: ProfileData | null;
   login: (
     email: string,
     password: string
@@ -22,46 +36,42 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   loading: boolean;
+  profileLoading: boolean;
+  fetchProfile: () => Promise<void>;
+  updateProfile: (
+    profileData: ProfileData
+  ) => Promise<{ success: boolean; error?: string }>;
+  updateUserInformation: (userData: {
+    fullName: string;
+  }) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     // Check for stored token on app load
     const storedToken = localStorage.getItem("auth-token");
-    console.log("🔍 AuthContext: Checking for stored token:", storedToken);
 
     if (storedToken) {
-      console.log(
-        "✅ AuthContext: Token found, setting token and fetching profile"
-      );
       setToken(storedToken);
       fetchUserProfile(storedToken);
     } else {
-      console.log("❌ AuthContext: No token found, setting loading to false");
       setLoading(false);
     }
   }, []);
 
   const fetchUserProfile = async (authToken: string) => {
-    console.log(
-      "🚀 AuthContext: Starting fetchUserProfile with token:",
-      authToken?.substring(0, 20) + "..."
-    );
-
     try {
-      console.log(
-        "📡 AuthContext: Making API call to:",
-        `${API_BASE_URL}/user/profile`
-      );
-
       const response = await fetch(`${API_BASE_URL}/user/profile`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -69,17 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      console.log("📥 AuthContext: API Response status:", response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ AuthContext: Profile data received:", data);
         setUser(data.user);
-        console.log("✅ AuthContext: User set successfully");
+        setProfile(data.profile);
       } else {
-        console.log("❌ AuthContext: Invalid response, removing token");
         const errorText = await response.text();
-        console.log("❌ AuthContext: Error response:", errorText);
         // Token is invalid, remove it
         localStorage.removeItem("auth-token");
         setToken(null);
@@ -94,12 +99,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Just set user to null and let the user try again
       setUser(null);
     } finally {
-      console.log("🏁 AuthContext: Setting loading to false");
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const fetchProfile = useCallback(async () => {
+    if (!token) return;
+
+    setProfileLoading(true);
+    try {
+      const profileData = await getUserProfile(token);
+      setProfile(profileData.profile);
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [token]);
+
+  const login = useCallback(async (email: string, password: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
@@ -115,6 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(data.token);
         setUser(data.user);
         localStorage.setItem("auth-token", data.token);
+        // Fetch profile after login
+        fetchProfile();
         return { success: true };
       } else {
         return { success: false, error: data.error || "Login failed" };
@@ -122,38 +142,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       return { success: false, error: "Network error. Please try again." };
     }
-  };
+  }, []);
 
-  const register = async (
-    fullName: string,
-    email: string,
-    password: string
-  ) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ fullName, email, password }),
-      });
+  const register = useCallback(
+    async (fullName: string, email: string, password: string) => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fullName, email, password }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem("auth-token", data.token);
-        return { success: true };
-      } else {
-        return { success: false, error: data.error || "Registration failed" };
+        if (response.ok) {
+          setToken(data.token);
+          setUser(data.user);
+          localStorage.setItem("auth-token", data.token);
+          // Fetch profile after registration
+          fetchProfile();
+          return { success: true };
+        } else {
+          return { success: false, error: data.error || "Registration failed" };
+        }
+      } catch (error) {
+        return { success: false, error: "Network error. Please try again." };
       }
-    } catch (error) {
-      return { success: false, error: "Network error. Please try again." };
-    }
-  };
+    },
+    []
+  );
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       if (token) {
         await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -169,17 +190,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setToken(null);
+      setProfile(null);
       localStorage.removeItem("auth-token");
     }
-  };
+  }, [token]);
+
+  const updateProfile = useCallback(
+    async (profileData: ProfileData) => {
+      if (!token) {
+        return { success: false, error: "Not authenticated" };
+      }
+
+      setProfileLoading(true);
+      try {
+        const response = await updateUserProfile(token, profileData);
+        setProfile(response.profile);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      } finally {
+        setProfileLoading(false);
+      }
+    },
+    [token]
+  );
+
+  const updateUserInformation = useCallback(
+    async (userData: { fullName: string }) => {
+      if (!token) {
+        return { success: false, error: "Not authenticated" };
+      }
+
+      setProfileLoading(true);
+      try {
+        const response = await updateUserInfo(token, userData);
+        setUser(response.user);
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, error: error.message };
+      } finally {
+        setProfileLoading(false);
+      }
+    },
+    [token]
+  );
 
   const value = {
     user,
     token,
+    profile,
     login,
     register,
     logout,
     loading,
+    profileLoading,
+    fetchProfile,
+    updateProfile,
+    updateUserInformation,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

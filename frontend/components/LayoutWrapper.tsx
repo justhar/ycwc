@@ -12,31 +12,59 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useAuth } from "@/app/contexts/AuthContext";
+import { useGroup } from "@/contexts/GroupContext";
+import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
 }
 
 // Routes that should NOT have sidebar
-const NO_SIDEBAR_ROUTES = ["/", "/auth"];
+const NO_SIDEBAR_ROUTES = ["/", "/signin", "/signup"];
 
-// Route to breadcrumb mapping
+// Route to breadcrumb mapping (without locale prefix)
 const ROUTE_BREADCRUMBS: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/chat": "AI Chat Assistant",
-  "/profile": "Profile",
-  "/explore": "Explore",
-  "/temp": "Temp",
+  "/chat": "chat",
+  "/profile": "profile",
+  "/search": "search",
+  "/tracker": "tracker",
+  "/match": "match",
 };
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
-  
+  const { user, token } = useAuth();
+  const { loadGroups } = useGroup();
+  const t = useTranslations("navigation");
+
   // Check if current route should show sidebar
   const shouldShowSidebar = !NO_SIDEBAR_ROUTES.includes(pathname);
 
-  // Get breadcrumb title for current route
-  const breadcrumbTitle = ROUTE_BREADCRUMBS[pathname] || "Page";
+  // Load groups when user is authenticated and sidebar is shown
+  useEffect(() => {
+    if (user && token && shouldShowSidebar) {
+      loadGroups(token);
+    }
+  }, [user, token, shouldShowSidebar, loadGroups]);
+
+  // Get breadcrumb title for current route (remove locale prefix)
+  const getBreadcrumbKey = (path: string) => {
+    // Remove locale prefix if present
+    const pathWithoutLocale = path.replace(/^\/(id|en)/, "");
+    return ROUTE_BREADCRUMBS[pathWithoutLocale] || "home";
+  };
+
+  const breadcrumbKey = getBreadcrumbKey(pathname);
+  const breadcrumbTitle = t(breadcrumbKey);
+
+  // Get home link with current locale
+  const getHomeLink = () => {
+    if (pathname.startsWith("/en")) return "/en/profile";
+    if (pathname.startsWith("/id")) return "/id/profile";
+    return "/profile"; // fallback
+  };
 
   // If no sidebar needed, just return children
   if (!shouldShowSidebar) {
@@ -58,7 +86,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard">Home</BreadcrumbLink>
+                  <BreadcrumbLink href={getHomeLink()}>
+                    {t("home")}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>

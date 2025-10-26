@@ -1,0 +1,51 @@
+{
+  "navigation": {
+    "home": "Beranda",
+    "search": "Cari",
+    "tracker": "Pelacak",
+    "profile": "Profil",
+    "chat": "Obrolan",
+    "match": "Cocokkan",
+    "logout": "Keluar",
+    "login": "Masuk",
+    "signup": "Daftar"
+  },
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "success": "Berhasil",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "edit": "Edit",
+    "delete": "Hapus",
+    "confirm": "Konfirmasi",
+    "yes": "Ya",
+    "no": "Tidak",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "close": "Tutup",
+    "open": "Buka"
+  },
+  "forms": {
+    "required": "Wajib diisi",
+    "email": "Email",
+    "password": "Kata sandi",
+    "confirmPassword": "Konfirmasi kata sandi",
+    "firstName": "Nama depan",
+    "lastName": "Nama belakang",
+    "fullName": "Nama lengkap",
+    "submit": "Kirim",
+    "reset": "Reset"
+  },
+  "auth": {
+    "loginTitle": "Masuk ke akun Anda",
+    "signupTitle": "Buat akun baru",
+    "forgotPassword": "Lupa kata sandi?",
+    "noAccount": "Belum punya akun?",
+    "hasAccount": "Sudah punya akun?",
+    "loginSuccess": "Berhasil masuk",
+    "signupSuccess": "Akun berhasil dibuat",
+    "logoutSuccess": "Berhasil keluar"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "navigation": {
+    "home": "Home",
+    "search": "Search",
+    "tracker": "Tracker",
+    "profile": "Profile",
+    "chat": "Chat",
+    "match": "Match",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "open": "Open"
+  },
+  "forms": {
+    "required": "Required",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "fullName": "Full name",
+    "submit": "Submit",
+    "reset": "Reset"
+  },
+  "auth": {
+    "loginTitle": "Sign in to your account",
+    "signupTitle": "Create a new account",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSuccess": "Successfully logged in",
+    "signupSuccess": "Account created successfully",
+    "logoutSuccess": "Successfully logged out"
+  }
+}
