@@ -18,7 +18,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "https://abroadly-ycwc.vercel.a
 app.use(
   "*",
   cors({
-    origin: FRONTEND_URL,
+    origin: "https://abroadly-ycwc.vercel.app",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
   })
