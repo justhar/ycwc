@@ -46,7 +46,7 @@ const getLocalizedMessage = (c: any, key: MessageKey): string => {
 };
 
 // Enable CORS for AI routes
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://abroadly-ycwc.vercel.app";
 
 ai.use(
   "/*",

@@ -7,7 +7,7 @@ import {
 } from "../db/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.API_BASE_URL || "https://ycwc-backend.vercel.app";
 
 export interface ProfileData {
   fullName?: string;

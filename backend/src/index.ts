@@ -12,7 +12,7 @@ import taskRecommendationsRoutes from "./routes/task-recommendations.js";
 import chatRoutes from "./routes/chat.js";
 
 const app = new Hono();
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://abroadly-ycwc.vercel.app";
 
 // Enable CORS for frontend communication
 app.use(
@@ -50,7 +50,7 @@ app.route("/task-recommendations", taskRecommendationsRoutes);
 app.route("/chat", chatRoutes);
 
 // Start the server
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.API_BASE_URL || "https://ycwc-backend.vercel.app";
 
 serve(
   {
