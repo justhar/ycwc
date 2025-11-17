@@ -507,7 +507,11 @@ export default function ApplicationTracker() {
       filterPriority === "all" || task.priority === filterPriority;
     const matchesGroup =
       !selectedGroup ||
-      (task.groupIds && task.groupIds.includes(selectedGroup));
+      (task.groupIds &&
+        task.groupIds.length > 0 &&
+        task.groupIds.includes(selectedGroup)) ||
+      !task.groupIds ||
+      task.groupIds.length === 0;
     return matchesSearch && matchesPriority && matchesGroup;
   });
 

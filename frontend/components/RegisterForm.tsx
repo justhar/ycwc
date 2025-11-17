@@ -5,6 +5,7 @@ import { useAuth } from "../app/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface RegisterFormProps {
@@ -25,17 +26,29 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     setError("");
 
     if (!fullname.trim()) {
-      setError("Full name is required");
+      setError("Nama lengkap harus diisi");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (!email.trim()) {
+      setError("Email harus diisi");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Format email tidak sesuai");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError("Password kurang dari 6 karakter");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Password tidak cocok");
       return;
     }
 
@@ -46,7 +59,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     if (result.success) {
       onSuccess?.();
     } else {
-      setError(result.error || "Registration failed");
+      // Use error message directly from server (now user-friendly)
+      setError(result.error || "Pendaftaran gagal");
     }
 
     setIsLoading(false);
@@ -96,9 +110,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
             <Label className="text-sm font-medium text-foreground dark:text-foreground">
               Password
             </Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -111,9 +124,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
             <Label className="text-sm font-medium text-foreground dark:text-foreground">
               Confirm Password
             </Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required

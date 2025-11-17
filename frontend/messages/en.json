@@ -69,6 +69,7 @@
     "logoutSuccess": "Successfully logged out"
   },
   "profile": {
+    "requiredFieldsLegend": "* Indicates a required field",
     "yourProfile": "Your Profile",
     "completeProfile": "Complete your profile for the best university recommendations!",
     "autofill": "Autofill",
@@ -205,11 +206,35 @@
     "matching": "Matching",
     "searchingDescription": "Finding universities that match you...",
     "completeProfile": "Please complete your profile first",
-    "matchesFound": "Found {{count}} university matches!",
+    "matchesFound": "Found {count} university matches!",
     "matchScore": "Match Score",
     "whyGoodMatch": "Why this is a good match:",
     "strengths": "Strengths",
     "considerations": "Considerations",
     "searchAgain": "Search Again"
+  },
+  "chat": {
+    "loading": "Loading messages...",
+    "noMessages": "No messages yet",
+    "startConversation": "Start a conversation by asking a question above",
+    "typeMessage": "Type your message here...",
+    "sending": "Sending...",
+    "error": "Failed to send message",
+    "loadingFailed": "Failed to load messages",
+    "failedProcessCV": "Failed to process CV",
+    "greeting": "Hello! 👋",
+    "greetingDescription": "Ask me anything about universities, scholarships, or your academic profile",
+    "question1Title": "What should I do?",
+    "question1Description": "Based on your profile",
+    "question1Text": "What should I do based on my profile?",
+    "question2Title": "Which universities fit me?",
+    "question2Description": "Recommendations for me",
+    "question2Text": "Which universities are suitable for me?",
+    "question3Title": "How to get scholarships?",
+    "question3Description": "Scholarship tips and tricks",
+    "question3Text": "How can I get scholarships?",
+    "question4Title": "What's next?",
+    "question4Description": "University application guide",
+    "question4Text": "What are the next steps in preparing my application?"
   }
 }

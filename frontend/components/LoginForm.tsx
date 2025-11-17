@@ -5,6 +5,7 @@ import { useAuth } from "../app/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface LoginFormProps {
@@ -27,12 +28,27 @@ export default function LoginForm({
     setError("");
     setIsLoading(true);
 
+    // Client-side validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Format email tidak sesuai");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password kurang dari 6 karakter");
+      setIsLoading(false);
+      return;
+    }
+
     const result = await login(email, password);
 
     if (result.success) {
       onSuccess?.();
     } else {
-      setError(result.error || "Login failed");
+      // Use error message directly from server (now user-friendly)
+      setError(result.error || "Login gagal");
     }
 
     setIsLoading(false);
@@ -68,8 +84,7 @@ export default function LoginForm({
             <Label className="text-sm font-medium text-foreground dark:text-foreground">
               Password
             </Label>
-            <Input
-              type="password"
+            <PasswordInput
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

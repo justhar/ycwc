@@ -21,6 +21,15 @@ auth.post("/register", async (c) => {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return c.json(
+        { error: getLocalizedMessage("invalidEmailFormat", "errors", lang) },
+        400
+      );
+    }
+
     if (password.length < 6) {
       return c.json(
         { error: getLocalizedMessage("passwordTooShort", "errors", lang) },

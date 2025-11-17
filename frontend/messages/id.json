@@ -49,6 +49,7 @@
   },
   "forms": {
     "required": "Wajib diisi",
+    "requiredFieldsLegend": "* Menunjukkan field yang wajib diisi",
     "email": "Email",
     "password": "Kata sandi",
     "confirmPassword": "Konfirmasi kata sandi",
@@ -69,8 +70,9 @@
     "logoutSuccess": "Berhasil keluar"
   },
   "profile": {
-    "yourProfile": "Profil Kamu",
-    "completeProfile": "Lengkapi profilmu untuk rekomendasi universitas terbaik!",
+    "requiredFieldsLegend": "* Menunjukkan field yang wajib diisi",
+    "yourProfile": "Profil Anda",
+    "completeProfile": "Lengkapi profil Anda untuk rekomendasi universitas terbaik!",
     "autofill": "Isi Otomatis",
     "autofillWithAI": "Isi Profile Otomatis dengan AI",
     "autofillDescription": "Upload CV/Resume kamu, dan biarkan AI kami mengisi profilmu secara otomatis.",
@@ -205,11 +207,35 @@
     "matching": "Mencocokkan",
     "searchingDescription": "Mencari universitas yang cocok untukmu...",
     "completeProfile": "Harap lengkapi profil Anda terlebih dahulu",
-    "matchesFound": "Ditemukan {{count}} kecocokan universitas!",
+    "matchesFound": "Ditemukan {count} kecocokan universitas!",
     "matchScore": "Skor Kecocokan",
     "whyGoodMatch": "Mengapa ini cocok:",
     "strengths": "Kekuatan",
     "considerations": "Pertimbangan",
     "searchAgain": "Cari Lagi"
+  },
+  "chat": {
+    "loading": "Memuat pesan...",
+    "noMessages": "Belum ada pesan",
+    "startConversation": "Mulai percakapan dengan mengajukan pertanyaan di atas",
+    "typeMessage": "Ketik pesan Anda di sini...",
+    "sending": "Mengirim...",
+    "error": "Gagal mengirim pesan",
+    "loadingFailed": "Gagal memuat pesan",
+    "failedProcessCV": "Gagal memproses CV",
+    "greeting": "Halo! 👋",
+    "greetingDescription": "Tanyakan apa saja tentang universitas, beasiswa, atau profil akademikmu",
+    "question1Title": "Apa yang harus kulakukan?",
+    "question1Description": "Berdasarkan profilku",
+    "question1Text": "Apa yang harus kulakukan berdasarkan profilku?",
+    "question2Title": "Universitas yang cocok?",
+    "question2Description": "Rekomendasi untuk saya",
+    "question2Text": "Universitas apa saja yang cocok untuk saya?",
+    "question3Title": "Cara mendapat beasiswa?",
+    "question3Description": "Tips dan trik beasiswa",
+    "question3Text": "Bagaimana cara mendapatkan beasiswa?",
+    "question4Title": "Langkah selanjutnya?",
+    "question4Description": "Panduan aplikasi universitas",
+    "question4Text": "Apa langkah selanjutnya dalam persiapan aplikasi?"
   }
 }

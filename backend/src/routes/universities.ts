@@ -49,17 +49,21 @@ app.get("/", async (c) => {
     // Tuition range filters (parse tuition ranges like "$57,000 - $60,000")
     if (minTuition) {
       conditions.push(
-        sql`CAST(REGEXP_REPLACE(SPLIT_PART(${
+        sql`CAST(NULLIF(REGEXP_REPLACE(SPLIT_PART(${
           universities.tuitionRange
-        }, ' - ', 1), '[^0-9]', '', 'g') AS INTEGER) >= ${parseInt(minTuition)}`
+        }, ' - ', 1), '[^0-9]', '', 'g'), '') AS INTEGER) >= ${parseInt(
+          minTuition
+        )}`
       );
     }
 
     if (maxTuition) {
       conditions.push(
-        sql`CAST(REGEXP_REPLACE(SPLIT_PART(${
+        sql`CAST(NULLIF(REGEXP_REPLACE(SPLIT_PART(${
           universities.tuitionRange
-        }, ' - ', 2), '[^0-9]', '', 'g') AS INTEGER) <= ${parseInt(maxTuition)}`
+        }, ' - ', 2), '[^0-9]', '', 'g'), '') AS INTEGER) <= ${parseInt(
+          maxTuition
+        )}`
       );
     }
 

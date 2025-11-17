@@ -118,6 +118,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <div className="flex flex-row items-center gap-1">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Image
+                    priority
+                    fetchPriority="high"
                     src="/logo.svg"
                     alt="Abroadly Logo"
                     width={32}
@@ -318,7 +320,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="text-xs text-muted-foreground flex items-center gap-1 px-2 py-1 rounded hover:bg-accent hover:text-accent-foreground cursor-pointer"
                   onClick={async () => {
                     try {
-                      await createNewChat();
+                      const chatId = await createNewChat();
+                      const locale = pathname.startsWith("/en") ? "/en" : "/id";
+                      router.push(`${locale}/chat/${chatId}`);
                     } catch (error) {
                       console.error("Failed to create chat:", error);
                     }
@@ -346,10 +350,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     >
                       <div
                         onClick={() => {
-                          selectChat(chat.id);
-                          if (pathname !== "/chat") {
-                            router.push("/chat");
-                          }
+                          selectChat(chat.id, false);
+                          router.push(getLocaleHref(`/chat/${chat.id}`));
                         }}
                         className="cursor-pointer"
                       >

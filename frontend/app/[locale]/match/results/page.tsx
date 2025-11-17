@@ -232,6 +232,11 @@ export default function MatchResultsPage() {
             <p className="text-gray-600">
               Found {matches.length} universities that match your profile
             </p>
+            <div className="mt-6">
+              <Button onClick={handleNewMatch} variant="outline">
+                Search Again
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-6 mb-12">
@@ -370,10 +375,6 @@ export default function MatchResultsPage() {
               </div>
             </div>
           )}
-
-          <div className="text-center mt-8">
-            <Button onClick={handleNewMatch}>Search Again</Button>
-          </div>
         </div>
       </div>
     </ProtectedRoute>

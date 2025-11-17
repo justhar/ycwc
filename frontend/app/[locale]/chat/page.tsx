@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, memo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,6 +29,7 @@ import {
 } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { getCurrentLocale } from "@/lib/api";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -51,6 +54,7 @@ const predefinedSuggestions: Suggestion[] = [
 ];
 
 export default function ChatPage() {
+  const router = useRouter();
   const { currentMessages, loading, sendMessage, createNewChat } = useChat();
   const { user } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
@@ -65,7 +69,7 @@ export default function ChatPage() {
   const [messageDisplayTexts, setMessageDisplayTexts] = useState<
     Record<string, string>
   >({});
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Fix hydration issue
   useEffect(() => {
@@ -397,14 +401,15 @@ export default function ChatPage() {
           <div className="space-y-3">
             <div className="flex items-end space-x-2">
               <div className="flex-1">
-                <Input
+                <Textarea
                   ref={inputRef}
                   value={inputValue}
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about academics, college prep, or career guidance..."
                   disabled={loading}
-                  className="min-h-[40px] resize-none"
+                  rows={3}
+                  className="resize-none"
                 />
               </div>
               <Button

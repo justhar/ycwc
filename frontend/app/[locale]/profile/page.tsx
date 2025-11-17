@@ -274,122 +274,6 @@ interface Program {
   universityId: string;
 }
 
-const mockUniversities: University[] = [
-  {
-    id: "1",
-    name: "Stanford University",
-    location: "Stanford, California",
-    country: "United States",
-    ranking: 2,
-    studentCount: 17249,
-    establishedYear: 1885,
-    type: "private",
-    tuitionRange: "$56,169 - $58,416",
-    acceptanceRate: "4.3",
-    description:
-      "Stanford University is a private research university in Stanford, California. Known for its academic excellence, entrepreneurial spirit, and proximity to Silicon Valley.",
-    website: "https://www.stanford.edu",
-    imageUrl: "/university-placeholder.jpg",
-    specialties: ["Computer Science", "Engineering", "Business", "Medicine"],
-    campusSize: "8,180 acres",
-  },
-  {
-    id: "2",
-    name: "Massachusetts Institute of Technology",
-    location: "Cambridge, Massachusetts",
-    country: "United States",
-    ranking: 1,
-    studentCount: 11858,
-    establishedYear: 1861,
-    type: "private",
-    tuitionRange: "$57,986 - $59,750",
-    acceptanceRate: "6.7",
-    description:
-      "MIT is a private research university in Cambridge, Massachusetts. The institute has an urban campus that extends more than a mile alongside the Charles River.",
-    website: "https://www.mit.edu",
-    imageUrl: "/university-placeholder.jpg",
-    specialties: ["Engineering", "Computer Science", "Physics", "Mathematics"],
-    campusSize: "168 acres",
-  },
-  {
-    id: "3",
-    name: "Harvard University",
-    location: "Cambridge, Massachusetts",
-    country: "United States",
-    ranking: 3,
-    studentCount: 23731,
-    establishedYear: 1636,
-    type: "private",
-    tuitionRange: "$54,002 - $57,261",
-    acceptanceRate: "3.4",
-    description:
-      "Harvard University is a private Ivy League research university in Cambridge, Massachusetts. Established in 1636, Harvard is the oldest institution of higher education in the United States.",
-    website: "https://www.harvard.edu",
-    imageUrl: "/university-placeholder.jpg",
-    specialties: ["Law", "Medicine", "Business", "Liberal Arts"],
-    campusSize: "5,076 acres",
-  },
-  {
-    id: "4",
-    name: "University of Oxford",
-    location: "Oxford, England",
-    country: "United Kingdom",
-    ranking: 4,
-    studentCount: 24515,
-    establishedYear: 1096,
-    type: "public",
-    tuitionRange: "£9,250 - £38,000",
-    acceptanceRate: "17.5",
-    description:
-      "The University of Oxford is a collegiate research university in Oxford, England. There is evidence of teaching as early as 1096, making it the oldest university in the English-speaking world.",
-    website: "https://www.ox.ac.uk",
-    imageUrl: "/university-placeholder.jpg",
-    specialties: ["Philosophy", "Politics", "Economics", "Literature"],
-    campusSize: "Collegiate system",
-  },
-  {
-    id: "5",
-    name: "University of Cambridge",
-    location: "Cambridge, England",
-    country: "United Kingdom",
-    ranking: 5,
-    studentCount: 24450,
-    establishedYear: 1209,
-    type: "public",
-    tuitionRange: "£9,250 - £33,825",
-    acceptanceRate: "21.0",
-    description:
-      "The University of Cambridge is a collegiate research university in Cambridge, United Kingdom. Founded in 1209 and granted a royal charter by Henry III in 1231.",
-    website: "https://www.cam.ac.uk",
-    imageUrl: "/university-placeholder.jpg",
-    specialties: [
-      "Mathematics",
-      "Natural Sciences",
-      "Engineering",
-      "Computer Science",
-    ],
-    campusSize: "Collegiate system",
-  },
-  {
-    id: "6",
-    name: "National University of Singapore",
-    location: "Singapore",
-    country: "Singapore",
-    ranking: 11,
-    studentCount: 40000,
-    establishedYear: 1905,
-    type: "public",
-    tuitionRange: "S$17,550 - S$45,000",
-    acceptanceRate: "5.0",
-    description:
-      "The National University of Singapore is a national public research university in Singapore. Founded in 1905 as the Straits Settlements and Federated Malay States Government Medical School.",
-    website: "https://www.nus.edu.sg",
-    imageUrl: "/university-placeholder.jpg",
-    specialties: ["Engineering", "Business", "Computer Science", "Medicine"],
-    campusSize: "1,200 acres",
-  },
-];
-
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
@@ -611,27 +495,22 @@ export default function DashboardPage() {
 
       setIsAIProcessing(true);
 
-      const processingToast = toast.loading("Extracting text from PDF...", {
-        description: "This may take a few moments for large files",
+      const processingToast = toast.loading("Analyzing CV with AI...", {
+        description: "Extracting profile information from your PDF",
       });
 
       try {
-        // Extract text from PDF using PDF.js
-        const pdfText = await extractTextFromPDF(file);
+        // Send file directly to backend using FormData
+        const formData = new FormData();
+        formData.append("file", file);
 
-        toast.dismiss(processingToast);
-        toast.loading("Analyzing CV with AI...", {
-          description: "Extracting profile information",
-        });
-
-        // Send extracted text to backend
         const response = await fetch(`${API_BASE_URL}/ai/profile-autofill`, {
           method: "POST",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ cvText: pdfText }),
+          body: formData,
         });
 
         const result = await response.json();
@@ -722,6 +601,10 @@ export default function DashboardPage() {
                 aiData.nationality || profile?.nationality || "Indonesia",
               targetLevel: aiData.targetLevel || profile?.targetLevel,
               intendedMajor: aiData.intendedMajor || profile?.intendedMajor,
+              intendedCountry:
+                aiData.intendedCountry || profile?.intendedCountry,
+              budgetMin: aiData.budgetMin || profile?.budgetMin,
+              budgetMax: aiData.budgetMax || profile?.budgetMax,
               institution: aiData.institution || profile?.institution,
               graduationYear: aiData.graduationYear || profile?.graduationYear,
               academicScore: aiData.academicScore || profile?.academicScore,
@@ -763,10 +646,23 @@ export default function DashboardPage() {
             };
 
             // Save to cloud using existing update function
+            console.log("🔵 About to call updateProfile() with:", {
+              intendedCountry: updatedData.intendedCountry,
+              budgetMin: updatedData.budgetMin,
+              budgetMax: updatedData.budgetMax,
+              englishTestsCount: updatedData.englishTests?.length,
+            });
+
             const profileResult = await updateProfile(updatedData);
+
+            console.log("✅ updateProfile result:", profileResult);
 
             if (profileResult.success) {
               toast.success("Profile data extracted and saved successfully!");
+              // Refresh profile from server to ensure sync
+              console.log("🔵 Calling fetchProfile() to refresh from server");
+              await fetchProfile();
+              console.log("✅ fetchProfile() completed");
             } else {
               toast.error(
                 profileResult.error || "Failed to save profile data to cloud"
@@ -804,6 +700,7 @@ export default function DashboardPage() {
       extracurriculars,
       updateUserInformation,
       updateProfile,
+      fetchProfile,
     ]
   );
 
@@ -1389,17 +1286,6 @@ export default function DashboardPage() {
                         </SelectContent>
                       </ControlledSelect>
                     </div>
-                    <div>
-                      <Label className="mb-2">{t("contactEmail")}</Label>
-                      <ControlledInput
-                        type="email"
-                        value={profileData.email}
-                        onUpdate={(value) =>
-                          handleProfileChange("email", value)
-                        }
-                        placeholder={t("enterEmail")}
-                      />
-                    </div>
                   </div>
                   <Button
                     className="mt-4"
@@ -1423,10 +1309,6 @@ export default function DashboardPage() {
               </div>
               <div>
                 <strong>{t("nationality")}:</strong> {profileData.nationality}
-              </div>
-              <div>
-                <strong>{t("email")}:</strong>{" "}
-                {profileData.email || t("notSet")}
               </div>
             </div>
 
@@ -1455,7 +1337,10 @@ export default function DashboardPage() {
                   </DialogHeader>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
-                      <Label className="mb-2">{t("institution")}</Label>
+                      <Label className="mb-2">
+                        {t("institution")}{" "}
+                        <span className="text-red-900">*</span>
+                      </Label>
                       <ControlledInput
                         value={profileData.institution}
                         onUpdate={(value) =>
@@ -1558,7 +1443,10 @@ export default function DashboardPage() {
                   </DialogHeader>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
-                      <Label className="mb-2">{t("targetLevel")}</Label>
+                      <Label className="mb-2">
+                        {t("targetLevel")}{" "}
+                        <span className="text-red-600">*</span>
+                      </Label>
                       <ControlledSelect
                         value={profileData.targetLevel}
                         onUpdate={(value) =>
@@ -1579,7 +1467,10 @@ export default function DashboardPage() {
                       </ControlledSelect>
                     </div>
                     <div>
-                      <Label className="mb-2">{t("intendedMajor")}</Label>
+                      <Label className="mb-2">
+                        {t("intendedMajor")}{" "}
+                        <span className="text-red-600">*</span>
+                      </Label>
                       <ControlledInput
                         value={profileData.intendedMajor}
                         onUpdate={(value) =>
@@ -1589,7 +1480,10 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <Label className="mb-2">{t("intendedCountry")}</Label>
+                      <Label className="mb-2">
+                        {t("intendedCountry")}{" "}
+                        <span className="text-red-600">*</span>
+                      </Label>
                       <ControlledInput
                         value={profileData.intendedCountry}
                         onUpdate={(value) =>
@@ -1627,6 +1521,9 @@ export default function DashboardPage() {
                   >
                     {profileLoading ? "Saving..." : "Save Changes"}
                   </Button>
+                  <p className="text-xs text-gray-500 mt-3">
+                    * {t("requiredFieldsLegend")}
+                  </p>
                 </DialogContent>
               </Dialog>
             </div>
@@ -2052,7 +1949,7 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-          <div className="border rounded-lg p-4 md:mr-4">
+          <div className="border rounded-lg p-4 my-5 md:mr-4">
             <h2 className="font-semibold text-2xl flex flex-row items-center gap-2">
               <Star className="text-yellow-400 " /> {t("myFavorites")}
             </h2>

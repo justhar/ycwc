@@ -38,6 +38,8 @@ export default function SignInPage() {
               src="/logo.svg"
               alt="Abroadly Logo"
               width={40}
+              priority
+              fetchPriority="high"
               height={40}
               className="mx-auto h-10 w-10 text-foreground dark:text-foreground"
             />

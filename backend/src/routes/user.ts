@@ -20,6 +20,8 @@ user.get("/profile", authMiddleware, async (c) => {
     const userId = c.get("userId");
     const lang = getLanguageFromHeader(c);
 
+    console.log("🔵 GET /profile called for userId:", userId);
+
     // Get basic user info
     const userInfo = await db
       .select({
@@ -44,6 +46,19 @@ user.get("/profile", authMiddleware, async (c) => {
       .from(profiles)
       .where(eq(profiles.userId, userId));
 
+    console.log("✅ GET /profile returning:", {
+      user: userInfo[0],
+      profileExists: profileInfo.length > 0,
+      profileData:
+        profileInfo.length > 0
+          ? {
+              intendedCountry: profileInfo[0].intendedCountry,
+              budgetMin: profileInfo[0].budgetMin,
+              budgetMax: profileInfo[0].budgetMax,
+            }
+          : null,
+    });
+
     return c.json({
       user: userInfo[0],
       profile: profileInfo.length > 0 ? profileInfo[0] : null,
@@ -63,6 +78,14 @@ user.put("/profile", authMiddleware, async (c) => {
   try {
     const userId = c.get("userId");
     const profileData = await c.req.json();
+
+    console.log("🔵 PUT /profile received data:", {
+      userId,
+      profileDataKeys: Object.keys(profileData),
+      intendedCountry: profileData.intendedCountry,
+      budgetMin: profileData.budgetMin,
+      budgetMax: profileData.budgetMax,
+    });
 
     // Validate required fields and prepare data
     const {
@@ -96,6 +119,16 @@ user.put("/profile", authMiddleware, async (c) => {
 
     if (existingProfile.length > 0) {
       // Update existing profile
+      console.log("📝 Updating existing profile with data:", {
+        dateOfBirth,
+        nationality,
+        targetLevel,
+        intendedMajor,
+        intendedCountry,
+        budgetMin,
+        budgetMax,
+      });
+
       updatedProfile = await db
         .update(profiles)
         .set({
@@ -118,6 +151,8 @@ user.put("/profile", authMiddleware, async (c) => {
         })
         .where(eq(profiles.userId, userId))
         .returning();
+
+      console.log("✅ Profile updated, returning:", updatedProfile[0]);
     } else {
       // Create new profile
       updatedProfile = await db

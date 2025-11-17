@@ -63,6 +63,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScholarshipCard from "@/components/ScholarshipCard";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { debounce } from "lodash";
 
 // Types
 interface University {
@@ -150,7 +151,7 @@ interface ScholarshipSearchReturn {
 
 // API client functions
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://ycwc-backend.vercel.app";
 
 const fetchUniversities = async (params?: {
   search?: string;
@@ -230,8 +231,6 @@ const fetchUniversityScholarships = async (
 export default function SearchPage() {
   const { user, token } = useAuth();
 
-  // Active query used by client-side filtering. It only changes when user clicks Search.
-  const [searchQuery, setSearchQuery] = useState("");
   // Controlled input value for the search box
   const [queryInput, setQueryInput] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("all");
@@ -299,8 +298,8 @@ export default function SearchPage() {
 
         // Load both universities and scholarships with pagination
         const [universityData, scholarshipData] = await Promise.all([
-          fetchUniversities({ limit: "20" }),
-          fetchScholarships({ limit: "20" }),
+          fetchUniversities({ limit: "20", offset: "0" }),
+          fetchScholarships({ limit: "20", offset: "0" }),
         ]);
 
         // Set universities and pagination
@@ -332,8 +331,8 @@ export default function SearchPage() {
   const mockPrograms: Program[] = [];
   const filteredPrograms = mockPrograms.filter((program) => {
     return (
-      program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      program.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      program.name.toLowerCase().includes(queryInput.toLowerCase()) ||
+      program.description?.toLowerCase().includes(queryInput.toLowerCase())
     );
   });
 
@@ -366,8 +365,11 @@ export default function SearchPage() {
 
   // Load data when tab changes
   useEffect(() => {
-    if (activeTab === "scholarships" && scholarships.length === 0) {
-      performScholarshipSearch(1);
+    // Reset search to default (no search term)
+    if (activeTab === "universities") {
+      performSearch(1, "");
+    } else if (activeTab === "scholarships") {
+      performScholarshipSearch(1, "");
     }
   }, [activeTab]);
 
@@ -427,25 +429,93 @@ export default function SearchPage() {
   // Handle search for both tabs
   const handleSearch = () => {
     if (activeTab === "universities") {
-      performSearch(1); // Always start from page 1 for new search
+      performSearch(1, queryInput);
     } else if (activeTab === "scholarships") {
-      performScholarshipSearch(1); // Always start from page 1 for new search
+      performScholarshipSearch(1, queryInput);
     }
   };
 
-  // Called when the user clicks Search; updates active searchQuery and fetches results
-  const performSearch = async (page: number = 1) => {
-    // update the active query for client-side filtering
-    setSearchQuery(queryInput);
-
+  // Perform search with explicit filter values
+  const performSearchWithFilters = async (
+    page: number = 1,
+    searchTerm: string,
+    country: string,
+    type: string,
+    minRank: string,
+    maxRank: string,
+    minTuit: string,
+    maxTuit: string,
+    minAccept: string,
+    maxAccept: string
+  ) => {
     try {
       setIsLoading(true);
       setError(null);
 
       const offset = (page - 1) * 20;
 
+      if (activeTab === "universities") {
+        const data = await fetchUniversities({
+          search: searchTerm || undefined,
+          country: country !== "all" ? country : undefined,
+          type: type !== "all" ? type : undefined,
+          minRanking: minRank || undefined,
+          maxRanking: maxRank || undefined,
+          minTuition: minTuit || undefined,
+          maxTuition: maxTuit || undefined,
+          minAcceptanceRate: minAccept || undefined,
+          maxAcceptanceRate: maxAccept || undefined,
+          limit: "20",
+          offset: offset.toString(),
+        });
+
+        setUniversities(data.universities);
+        setUniversityPagination(data.pagination);
+      } else if (activeTab === "scholarships") {
+        const data = await fetchScholarships({
+          search: searchTerm || undefined,
+          country: country !== "all" ? country : undefined,
+          type: type !== "all" ? type : undefined,
+          limit: "20",
+          offset: offset.toString(),
+        });
+
+        setScholarships(data.scholarships);
+        setScholarshipPagination(data.pagination);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch data");
+      console.error("Error fetching data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle real-time search on input change
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setQueryInput(newValue);
+
+    // Only search the active tab
+    if (activeTab === "universities") {
+      performSearch(1, newValue);
+    } else if (activeTab === "scholarships") {
+      performScholarshipSearch(1, newValue);
+    }
+  };
+
+  // Called when the user types or clicks Search; fetches results
+  const performSearch = async (page: number = 1, searchTerm?: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const offset = (page - 1) * 20;
+      // Use provided searchTerm or fall back to queryInput
+      const term = searchTerm !== undefined ? searchTerm : queryInput;
+
       const data = await fetchUniversities({
-        search: queryInput || undefined,
+        search: term || undefined,
         country: selectedCountry !== "all" ? selectedCountry : undefined,
         type: selectedType !== "all" ? selectedType : undefined,
         minRanking: minRanking || undefined,
@@ -472,15 +542,20 @@ export default function SearchPage() {
   };
 
   // Search scholarships with pagination
-  const performScholarshipSearch = async (page: number = 1) => {
+  const performScholarshipSearch = async (
+    page: number = 1,
+    searchTerm?: string
+  ) => {
     try {
       setIsLoading(true);
       setError(null);
 
       const offset = (page - 1) * 20;
+      // Use provided searchTerm or fall back to queryInput
+      const term = searchTerm !== undefined ? searchTerm : queryInput;
 
       const data = await fetchScholarships({
-        search: queryInput || undefined,
+        search: term || undefined,
         country: selectedCountry !== "all" ? selectedCountry : undefined,
         type: selectedType !== "all" ? selectedType : undefined,
         limit: "20",
@@ -531,7 +606,7 @@ export default function SearchPage() {
                   <Input
                     placeholder="Search universities, scholarships..."
                     value={queryInput}
-                    onChange={(e) => setQueryInput(e.target.value)}
+                    onChange={handleSearchInputChange}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         handleSearch();
@@ -539,15 +614,27 @@ export default function SearchPage() {
                     }}
                     className="pl-10"
                   />
-                  <Button className="ml-3" onClick={handleSearch}>
-                    Search
-                  </Button>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Select
                     value={selectedCountry}
-                    onValueChange={setSelectedCountry}
+                    onValueChange={(value) => {
+                      setSelectedCountry(value);
+                      // Perform search with new country filter
+                      performSearchWithFilters(
+                        1,
+                        queryInput,
+                        value,
+                        selectedType,
+                        minRanking,
+                        maxRanking,
+                        minTuition,
+                        maxTuition,
+                        minAcceptanceRate,
+                        maxAcceptanceRate
+                      );
+                    }}
                   >
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Country" />
@@ -564,7 +651,25 @@ export default function SearchPage() {
                     </SelectContent>
                   </Select>
 
-                  <Select value={selectedType} onValueChange={setSelectedType}>
+                  <Select
+                    value={selectedType}
+                    onValueChange={(value) => {
+                      setSelectedType(value);
+                      // Perform search with new type filter
+                      performSearchWithFilters(
+                        1,
+                        queryInput,
+                        selectedCountry,
+                        value,
+                        minRanking,
+                        maxRanking,
+                        minTuition,
+                        maxTuition,
+                        minAcceptanceRate,
+                        maxAcceptanceRate
+                      );
+                    }}
+                  >
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>

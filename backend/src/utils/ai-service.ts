@@ -5,9 +5,7 @@ import {
   scholarships,
   universityScholarships,
 } from "../db/schema.js";
-import { eq, and, sql } from "drizzle-orm";
-
-const API_BASE_URL = process.env.API_BASE_URL || "https://ycwc-backend.vercel.app";
+import { eq, and } from "drizzle-orm";
 
 export interface ProfileData {
   fullName?: string;
@@ -107,6 +105,112 @@ class AIService {
       return {
         success: false,
         error: error instanceof Error ? error.message : "AI analysis failed",
+      };
+    }
+  }
+
+  async analyzeCVFile(
+    fileBuffer: Buffer,
+    mimeType: string
+  ): Promise<AIAnalysisResult> {
+    try {
+      // Use inline data instead of Files API - simpler and more reliable
+      // Encode file as base64
+      const base64Data = fileBuffer.toString("base64");
+
+      // Use the file inline in the content request
+      const response = await this.genai.models.generateContent({
+        model: "gemini-2.0-flash-001",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `You are an expert CV/Resume analyzer. Extract academic and personal information from the following CV/PDF and return it in JSON format.
+
+Please extract the following information and return it as a JSON object:
+
+{
+  "fullName": "extracted full name",
+  "email": "extracted email address",
+  "phone": "extracted phone number",
+  "dateOfBirth": "extracted date of birth in YYYY-MM-DD format",
+  "nationality": "extracted nationality",
+  "targetLevel": "undergraduate|graduate|postgraduate based on education level",
+  "intendedMajor": "extracted field of study or major",
+  "institution": "current or most recent educational institution",
+  "graduationYear": "graduation year as number",
+  "academicScore": "GPA or academic score if mentioned",
+  "scoreScale": "gpa4|gpa5|percentage|other based on score type",
+  "englishTests": [
+    {
+      "type": "TOEFL|IELTS|TOEIC|etc",
+      "score": "score value",
+      "date": "test date if available"
+    }
+  ],
+  "standardizedTests": [
+    {
+      "type": "SAT|ACT|GRE|GMAT|etc",
+      "score": "score value",
+      "date": "test date if available"
+    }
+  ],
+  "awards": [
+    {
+      "title": "award title",
+      "year": "year received",
+      "level": "local|national|international"
+    }
+  ],
+  "extracurriculars": [
+    {
+      "activity": "activity name",
+      "period": "time period",
+      "description": "brief description"
+    }
+  ]
+}
+
+Rules:
+1. Only include fields that are clearly mentioned in the document
+2. Use null for missing information
+3. Be conservative in your extractions - only include data you're confident about
+4. For dates, use YYYY-MM-DD format when possible
+5. Return only valid JSON, no additional text
+6. If a field is not found, omit it from the JSON or set it to null`,
+              },
+              {
+                inlineData: {
+                  mimeType: mimeType,
+                  data: base64Data,
+                },
+              },
+            ],
+          },
+        ],
+        config: {
+          temperature: 0.1,
+          maxOutputTokens: 2048,
+        },
+      });
+
+      console.log("📄 File analyzed successfully");
+
+      const result = response.text || "";
+      const parsedData = this.parseAIResponse(result);
+
+      return {
+        success: true,
+        data: parsedData,
+        confidence: 0.85,
+      };
+    } catch (error) {
+      console.error("AI File Analysis Error:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "AI file analysis failed",
       };
     }
   }
@@ -280,7 +384,7 @@ Rules:
     console.log("🎯 Starting AI university matching...");
 
     try {
-      // Prepare universities data for AI analysis
+      // Step 1: Match existing universities first
       const universitiesForAI = universities.map((uni) => ({
         id: uni.id,
         name: uni.name,
@@ -294,7 +398,7 @@ Rules:
         description: uni.description,
       }));
 
-      const prompt = `You are an expert university admissions counselor. Analyze the user profile and match them with the most suitable universities from the provided list.
+      const matchPrompt = `You are an expert university admissions counselor. Analyze the user profile and match them with the most suitable universities from the provided list.
 
 USER PROFILE:
 - Name: ${userProfile.fullName || "Not provided"}
@@ -357,14 +461,10 @@ ${JSON.stringify(universitiesForAI, null, 2)}
 
 TASK:
 1. Analyze each existing university and calculate a match score (0-100) based on academic fit, program alignment, cultural/geographic fit, financial fit, and admission probability.
+2. For each university, provide: match score, detailed reasoning, 2-3 key strengths, and 1-2 potential concerns.
+3. Rank all matches by score (highest first).
 
-2. For each existing university, provide match score, detailed reasoning, 2-3 key strengths, and 1-2 potential concerns.
-
-3. Suggest 2-3 additional universities NOT in the provided list with complete realistic information including scholarships.
-
-4. Rank all matches by score (highest first).
-
-CRITICAL: Respond ONLY with valid JSON. Do not include any text before or after the JSON. Do not use markdown code blocks. Start your response with { and end with }.
+CRITICAL: Respond ONLY with valid JSON. No text before or after. No markdown. Start with { and end with }.
 
 RESPONSE FORMAT (JSON only):
 {
@@ -376,91 +476,35 @@ RESPONSE FORMAT (JSON only):
       "strengths": ["string"],
       "concerns": ["string"]
     }
-  ],
-  "suggestedUniversities": [
-    {
-      "name": "string",
-      "location": "string",
-      "country": "string",
-      "reasoning": "string",
-      "estimatedMatchScore": number,
-      "specialties": ["string"],
-      "type": "string",
-      "ranking": number,
-      "studentCount": number,
-      "establishedYear": number,
-      "tuitionRange": "string",
-      "acceptanceRate": "string",
-      "description": "string",
-      "website": "string",
-      "campusSize": "string",
-      "roomBoardCost": "string",
-      "booksSuppliesCost": "string",
-      "personalExpensesCost": "string",
-      "facilitiesInfo": {
-        "library": "string",
-        "recreationCenter": "string",
-        "researchLabs": "string",
-        "healthServices": "string"
-      },
-      "housingOptions": ["string"],
-      "studentOrganizations": ["string"],
-      "diningOptions": ["string"],
-      "transportationInfo": ["string"],
-      "scholarships": [
-        {
-          "name": "string",
-          "type": "string",
-          "amount": "string",
-          "description": "string",
-          "requirements": ["string"],
-          "deadline": "string",
-          "provider": "string",
-          "applicationUrl": "string",
-          "eligiblePrograms": ["string"],
-          "maxRecipients": number
-        }
-      ]
-    }
   ]
 }
 
-DATA TYPE RULES:
 - All numbers must be actual numbers (not strings)
-- maxRecipients must be number or null
-- acceptanceRate must be string like "65.50"
-- Respond with JSON only - no explanations, no markdown, no additional text.`;
+- acceptanceRate must be string like "65.50"`;
 
-      console.log("📤 Sending prompt to Gemini AI...");
+      console.log("📤 Sending match prompt to Gemini AI...");
 
-      const result = await this.genai.models.generateContent({
+      const matchResult = await this.genai.models.generateContent({
         model: "gemini-2.0-flash-001",
-        contents: prompt,
+        contents: matchPrompt,
         config: {
           temperature: 0.0,
           maxOutputTokens: 4096,
         },
       });
-      const aiResponseText = result.text || "";
+      const matchResponseText = matchResult.text || "";
 
-      console.log("📥 Received AI response");
+      console.log("📥 Received match response");
 
-      // Parse the AI response
-      let parsedResponse;
+      // Parse match response
+      let parsedMatches;
       try {
-        // Clean the response - remove any markdown formatting and fix common issues
-        console.log("Raw AI response length:", aiResponseText.length);
-        console.log(
-          "Raw AI response preview:",
-          aiResponseText.substring(0, 500) +
-            (aiResponseText.length > 500 ? "..." : "")
-        );
-        let cleanedResponse = aiResponseText
+        console.log("Raw match response length:", matchResponseText.length);
+        let cleanedResponse = matchResponseText
           .replace(/```json\n?|\n?```/g, "")
           .replace(/```\n?|\n?```/g, "")
           .trim();
 
-        // Extract JSON by finding the outermost braces
         const firstBrace = cleanedResponse.indexOf("{");
         const lastBrace = cleanedResponse.lastIndexOf("}");
         if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
@@ -468,154 +512,29 @@ DATA TYPE RULES:
             firstBrace,
             lastBrace + 1
           );
-        } else {
-          throw new Error("No valid JSON object found in response");
         }
 
-        // Fix common JSON issues
         cleanedResponse = cleanedResponse
-          .replace(/,(\s*[}\]])/g, "$1") // Remove trailing commas
-          .replace(/:\s*:/g, ":") // Fix double colons
-          .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Quote unquoted keys
-          .replace(/"null"/g, "null") // Fix quoted null values
-          .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1") // Unquote numeric values (including decimals)
-          .replace(/:\s*"(true|false)"/g, ":$1") // Unquote boolean values
-          .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"'); // Keep dates as strings
+          .replace(/,(\s*[}\]])/g, "$1")
+          .replace(/:\s*:/g, ":")
+          .replace(/([{,]\s*)(\w+):/g, '$1"$2":')
+          .replace(/"null"/g, "null")
+          .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1")
+          .replace(/:\s*"(true|false)"/g, ":$1")
+          .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"');
 
-        console.log("Cleaned response length:", cleanedResponse.length);
-        console.log(
-          "Cleaned response preview:",
-          cleanedResponse.substring(0, 500) +
-            (cleanedResponse.length > 500 ? "..." : "")
-        );
-
-        // Handle incomplete JSON by attempting to complete it
-        let bracketCount = 0;
-        let arrayBracketCount = 0;
-        for (let i = 0; i < cleanedResponse.length; i++) {
-          if (cleanedResponse[i] === "{") bracketCount++;
-          if (cleanedResponse[i] === "}") bracketCount--;
-          if (cleanedResponse[i] === "[") arrayBracketCount++;
-          if (cleanedResponse[i] === "]") arrayBracketCount--;
-        }
-
-        // If JSON is incomplete, try to close it properly
-        if (bracketCount > 0 || arrayBracketCount > 0) {
-          console.log("Attempting to fix incomplete JSON...");
-
-          // Remove incomplete last object/array if present
-          let lastCommaIndex = cleanedResponse.lastIndexOf(",");
-          let lastOpenBrace = cleanedResponse.lastIndexOf("{");
-          let lastOpenBracket = cleanedResponse.lastIndexOf("[");
-
-          // If there's an incomplete object or array after the last comma
-          if (
-            lastCommaIndex > -1 &&
-            (lastOpenBrace > lastCommaIndex || lastOpenBracket > lastCommaIndex)
-          ) {
-            cleanedResponse = cleanedResponse.substring(0, lastCommaIndex);
-          }
-
-          // Close remaining brackets
-          while (arrayBracketCount > 0) {
-            cleanedResponse += "]";
-            arrayBracketCount--;
-          }
-          while (bracketCount > 0) {
-            cleanedResponse += "}";
-            bracketCount--;
-          }
-        }
-
-        console.log("Attempting JSON parse...");
-        parsedResponse = JSON.parse(cleanedResponse);
+        parsedMatches = JSON.parse(cleanedResponse);
       } catch (parseError) {
-        console.error("Failed to parse AI response:", parseError);
-        console.error(
-          "Error details:",
-          parseError instanceof Error ? parseError.message : "Unknown error"
-        );
-
-        // Try a more aggressive cleaning approach
-        try {
-          console.log("Attempting more aggressive cleaning...");
-          let aggressiveCleaned = aiResponseText
-            .replace(/```json\n?|\n?```/g, "")
-            .replace(/```\n?|\n?```/g, "")
-            .trim();
-
-          // Extract JSON
-          const firstBrace = aggressiveCleaned.indexOf("{");
-          const lastBrace = aggressiveCleaned.lastIndexOf("}");
-          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-            aggressiveCleaned = aggressiveCleaned.substring(
-              firstBrace,
-              lastBrace + 1
-            );
-          }
-
-          aggressiveCleaned = aggressiveCleaned
-            .replace(/([{,]\s*)(\w+)\s*:\s*/g, '$1"$2":') // Ensure all keys are quoted
-            .replace(
-              /:\s*([^",{\[\s][^,}\]]*[^",}\]\s])\s*([,}\]])/g,
-              ':"$1"$2'
-            ) // Quote unquoted string values
-            .replace(/:\s*(\d+(?:\.\d+)?)\s*([,}\]])/g, ":$1$2") // Unquote numbers
-            .replace(/:\s*(true|false)\s*([,}\]])/g, ":$1$2") // Unquote booleans
-            .replace(/:\s*null\s*([,}\]])/g, ":null$1") // Ensure null is not quoted
-            .replace(/,(\s*[}\]])/g, "$1"); // Remove trailing commas
-
-          console.log(
-            "Aggressive cleaned preview:",
-            aggressiveCleaned.substring(0, 500)
-          );
-          parsedResponse = JSON.parse(aggressiveCleaned);
-          console.log("Successfully parsed with aggressive cleaning");
-        } catch (aggressiveError) {
-          console.error("Aggressive cleaning also failed:", aggressiveError);
-
-          // Try a more aggressive approach - extract only the matches part if suggestedUniversities is causing issues
-          try {
-            console.log("Attempting to extract only matches...");
-            const matchesMatch = aiResponseText.match(
-              /"matches"\s*:\s*\[[\s\S]*?\]/
-            );
-            if (matchesMatch) {
-              const matchesArray = matchesMatch[0].split(":")[1].trim();
-              let matchesOnlyJson = `{"matches": ${matchesArray}, "suggestedUniversities": []}`;
-
-              // Apply the same cleaning as main parsing
-              matchesOnlyJson = matchesOnlyJson
-                .replace(/,(\s*[}\]])/g, "$1") // Remove trailing commas
-                .replace(/:\s*:/g, ":") // Fix double colons
-                .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Quote unquoted keys
-                .replace(/"null"/g, "null") // Fix quoted null values
-                .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1") // Unquote numeric values (including decimals)
-                .replace(/:\s*"(true|false)"/g, ":$1") // Unquote boolean values
-                .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"'); // Keep dates as strings
-
-              console.log(
-                "Matches only JSON:",
-                matchesOnlyJson.substring(0, 1000)
-              );
-              parsedResponse = JSON.parse(matchesOnlyJson);
-              console.log("Successfully parsed matches only");
-            } else {
-              throw new Error("Could not extract matches from response");
-            }
-          } catch (fallbackError) {
-            console.error("Fallback parsing also failed:", fallbackError);
-            return {
-              success: false,
-              error: "Failed to parse AI response after multiple attempts",
-            };
-          }
-        }
+        console.error("Failed to parse match response:", parseError);
+        return {
+          success: false,
+          error: "Failed to parse AI match response",
+        };
       }
 
-      // Process matches and add university data
+      // Process matches
       const processedMatches: UniversityMatch[] =
-        parsedResponse.matches
+        parsedMatches.matches
           ?.map((match: any) => {
             const university = universities.find(
               (uni) => uni.id === match.universityId
@@ -633,79 +552,139 @@ DATA TYPE RULES:
           })
           .filter((match: any) => match.university) || [];
 
-      // Sort by match score (highest first)
       processedMatches.sort((a, z) => z.matchScore - a.matchScore);
 
-      // Process suggested universities to fix data types
-      const processedSuggestedUniversities = (
-        parsedResponse.suggestedUniversities || []
-      ).map((uni: any) => {
-        // Helper function to parse JSON strings or return arrays as-is
-        const parseJsonField = (field: any) => {
-          if (typeof field === "string") {
-            try {
-              return JSON.parse(field);
-            } catch {
-              return [];
-            }
+      // Step 2: Generate suggestions separately
+      console.log("📤 Generating AI suggestions...");
+
+      let suggestedUniversities: any[] = [];
+      try {
+        const suggestPrompt = `Based on this student profile, suggest 2-3 universities NOT in an existing database that would be excellent matches:
+
+USER PROFILE:
+- Target Level: ${userProfile.targetLevel || "Not specified"}
+- Intended Major: ${userProfile.intendedMajor || "Not specified"}
+- Academic Score: ${userProfile.academicScore || "Not provided"} (Scale: ${
+          userProfile.scoreScale || "Not specified"
+        })
+- Intended Study Abroad Country: ${
+          userProfile.intendedCountry || "Not specified"
+        }
+- Budget Range: ${
+          userProfile.budgetMin && userProfile.budgetMax
+            ? `$${userProfile.budgetMin.toLocaleString()} - $${userProfile.budgetMax.toLocaleString()} per year`
+            : userProfile.budgetMin
+            ? `Minimum $${userProfile.budgetMin.toLocaleString()} per year`
+            : userProfile.budgetMax
+            ? `Maximum $${userProfile.budgetMax.toLocaleString()} per year`
+            : "Not specified"
+        }
+
+TASK: Suggest 2-3 real universities with complete, realistic information.
+
+RESPOND ONLY with JSON (no markdown, no text before/after):
+{
+  "suggestions": [
+    {
+      "name": "string",
+      "location": "string",
+      "country": "string",
+      "reasoning": "string",
+      "estimatedMatchScore": number,
+      "specialties": ["string"],
+      "type": "public|private",
+      "ranking": number,
+      "studentCount": number,
+      "establishedYear": number,
+      "tuitionRange": "string",
+      "acceptanceRate": "string",
+      "description": "string",
+      "website": "string"
+    }
+  ]
+}`;
+
+        const suggestResult = await this.genai.models.generateContent({
+          model: "gemini-2.0-flash-001",
+          contents: suggestPrompt,
+          config: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          },
+        });
+
+        const suggestResponseText = suggestResult.text || "";
+        console.log("📥 Received suggestions response");
+
+        try {
+          let cleanedSuggest = suggestResponseText
+            .replace(/```json\n?|\n?```/g, "")
+            .replace(/```\n?|\n?```/g, "")
+            .trim();
+
+          const firstBrace = cleanedSuggest.indexOf("{");
+          const lastBrace = cleanedSuggest.lastIndexOf("}");
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            cleanedSuggest = cleanedSuggest.substring(
+              firstBrace,
+              lastBrace + 1
+            );
           }
-          return Array.isArray(field) ? field : [];
-        };
 
-        return {
-          ...uni,
-          ranking:
-            typeof uni.ranking === "string"
-              ? parseInt(uni.ranking)
-              : uni.ranking,
-          studentCount:
-            typeof uni.studentCount === "string"
-              ? parseInt(uni.studentCount)
-              : uni.studentCount,
-          establishedYear:
-            typeof uni.establishedYear === "string"
-              ? parseInt(uni.establishedYear)
-              : uni.establishedYear,
-          estimatedMatchScore:
-            typeof uni.estimatedMatchScore === "string"
-              ? parseInt(uni.estimatedMatchScore)
-              : uni.estimatedMatchScore,
-          specialties: parseJsonField(uni.specialties),
-          housingOptions: parseJsonField(uni.housingOptions),
-          studentOrganizations: parseJsonField(uni.studentOrganizations),
-          diningOptions: parseJsonField(uni.diningOptions),
-          transportationInfo: parseJsonField(uni.transportationInfo),
-          facilitiesInfo:
-            typeof uni.facilitiesInfo === "string"
-              ? (() => {
-                  try {
-                    return JSON.parse(uni.facilitiesInfo);
-                  } catch {
-                    return {};
-                  }
-                })()
-              : uni.facilitiesInfo || {},
-          scholarships: (parseJsonField(uni.scholarships) || []).map(
-            (scholarship: any) => ({
-              ...scholarship,
-              maxRecipients:
-                scholarship.maxRecipients === "null" ||
-                scholarship.maxRecipients === null
-                  ? null
-                  : typeof scholarship.maxRecipients === "string"
-                  ? parseInt(scholarship.maxRecipients)
-                  : scholarship.maxRecipients,
-              requirements: parseJsonField(scholarship.requirements),
-              eligiblePrograms: parseJsonField(scholarship.eligiblePrograms),
+          cleanedSuggest = cleanedSuggest
+            .replace(/,(\s*[}\]])/g, "$1")
+            .replace(/:\s*:/g, ":")
+            .replace(/([{,]\s*)(\w+):/g, '$1"$2":')
+            .replace(/"null"/g, "null")
+            .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1")
+            .replace(/:\s*"(true|false)"/g, ":$1")
+            .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"');
+
+          const parsedSuggest = JSON.parse(cleanedSuggest);
+          suggestedUniversities = (parsedSuggest.suggestions || []).map(
+            (uni: any) => ({
+              ...uni,
+              ranking:
+                typeof uni.ranking === "string"
+                  ? parseInt(uni.ranking)
+                  : uni.ranking,
+              studentCount:
+                typeof uni.studentCount === "string"
+                  ? parseInt(uni.studentCount)
+                  : uni.studentCount,
+              establishedYear:
+                typeof uni.establishedYear === "string"
+                  ? parseInt(uni.establishedYear)
+                  : uni.establishedYear,
+              estimatedMatchScore:
+                typeof uni.estimatedMatchScore === "string"
+                  ? parseInt(uni.estimatedMatchScore)
+                  : uni.estimatedMatchScore,
+              specialties: Array.isArray(uni.specialties)
+                ? uni.specialties
+                : [],
             })
-          ),
-        };
-      });
+          );
+        } catch (suggestError) {
+          console.error(
+            "Failed to parse suggestions:",
+            suggestError,
+            suggestResponseText
+          );
+          // Continue with empty suggestions
+          suggestedUniversities = [];
+        }
+      } catch (suggestError) {
+        console.error("Suggestion generation error:", suggestError);
+        // Continue with empty suggestions - not a critical failure
+        suggestedUniversities = [];
+      }
 
+      // Return combined results
       return {
         success: true,
         matches: processedMatches,
-        suggestedUniversities: processedSuggestedUniversities,
+        suggestedUniversities,
       };
     } catch (error) {
       console.error("University matching error:", error);
@@ -745,6 +724,14 @@ DATA TYPE RULES:
           continue;
         }
 
+        // Parse acceptanceRate - remove % sign if present and ensure numeric format
+        const parseAcceptanceRate = (rate: any): string => {
+          if (!rate) return "50.00";
+          const rateStr = String(rate).replace("%", "").trim();
+          const numeric = parseFloat(rateStr);
+          return isNaN(numeric) ? "50.00" : numeric.toFixed(2);
+        };
+
         // Insert new university with AI-provided data
         const newUniversity = await db
           .insert(universities)
@@ -757,7 +744,7 @@ DATA TYPE RULES:
             establishedYear: suggested.establishedYear || 1900,
             type: suggested.type === "private" ? "private" : "public",
             tuitionRange: suggested.tuitionRange || "Contact for details",
-            acceptanceRate: suggested.acceptanceRate || "50.00",
+            acceptanceRate: parseAcceptanceRate(suggested.acceptanceRate),
             description:
               suggested.description ||
               suggested.reasoning ||

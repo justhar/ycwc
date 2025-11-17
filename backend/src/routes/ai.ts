@@ -46,12 +46,17 @@ const getLocalizedMessage = (c: any, key: MessageKey): string => {
 };
 
 // Enable CORS for AI routes
-const FRONTEND_URL = process.env.FRONTEND_URL || "https://abroadly-ycwc.vercel.app";
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://abroadly-ycwc.vercel.app";
 
 ai.use(
   "/*",
   cors({
-    origin: FRONTEND_URL,
+    origin: [
+      "https://abroadly-ycwc.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:3001",
+    ],
     credentials: true,
   })
 );
@@ -59,44 +64,112 @@ ai.use(
 // Initialize AI service
 const aiService = new AIService();
 
-// Profile autofill endpoint
+// Profile autofill endpoint - handles both file upload and text extraction
 ai.post("/profile-autofill", async (c) => {
   try {
-    const { cvText } = await c.req.json();
+    let analysisResult;
 
-    if (!cvText || typeof cvText !== "string") {
-      return c.json(
-        {
-          success: false,
-          error: getLocalizedMessage(c, "noFileUploaded"),
-        },
-        400
-      );
+    // Try to get file from form data
+    try {
+      const formData = await c.req.formData();
+      const cvFile = formData.get("file") as File;
+
+      if (cvFile) {
+        // File upload path - use Files API
+        const validMimeTypes = ["application/pdf", "application/x-pdf"];
+        if (!validMimeTypes.includes(cvFile.type)) {
+          return c.json(
+            {
+              success: false,
+              error: getLocalizedMessage(c, "invalidFileType"),
+            },
+            400
+          );
+        }
+
+        const maxFileSize = 10 * 1024 * 1024; // 10MB
+        if (cvFile.size > maxFileSize) {
+          return c.json(
+            {
+              success: false,
+              error: getLocalizedMessage(c, "fileTooLarge"),
+            },
+            400
+          );
+        }
+
+        const fileBuffer = await cvFile.arrayBuffer();
+        analysisResult = await aiService.analyzeCVFile(
+          Buffer.from(fileBuffer),
+          cvFile.type
+        );
+      } else {
+        // Fallback to JSON body with cvText (text extraction path)
+        const body = await c.req.json();
+        const { cvText } = body;
+
+        if (!cvText || typeof cvText !== "string") {
+          return c.json(
+            {
+              success: false,
+              error: getLocalizedMessage(c, "noFileUploaded"),
+            },
+            400
+          );
+        }
+
+        // Validate text length (approximate 10MB limit for text)
+        if (cvText.length > 10 * 1024 * 1024) {
+          return c.json(
+            {
+              success: false,
+              error: getLocalizedMessage(c, "fileTooLarge"),
+            },
+            400
+          );
+        }
+
+        if (!cvText.trim()) {
+          return c.json(
+            {
+              success: false,
+              error: "Could not extract text from PDF",
+            },
+            400
+          );
+        }
+
+        analysisResult = await aiService.analyzeCVText(cvText);
+      }
+    } catch (parseError) {
+      // If form parsing fails, try JSON body
+      const body = await c.req.json().catch(() => null);
+
+      if (!body || !body.cvText) {
+        return c.json(
+          {
+            success: false,
+            error: getLocalizedMessage(c, "noFileUploaded"),
+          },
+          400
+        );
+      }
+
+      const { cvText } = body;
+
+      if (!cvText || typeof cvText !== "string") {
+        return c.json(
+          {
+            success: false,
+            error: getLocalizedMessage(c, "noFileUploaded"),
+          },
+          400
+        );
+      }
+
+      analysisResult = await aiService.analyzeCVText(cvText);
     }
 
-    // Validate text length (approximate 10MB limit for text)
-    if (cvText.length > 10 * 1024 * 1024) {
-      return c.json(
-        {
-          success: false,
-          error: getLocalizedMessage(c, "fileTooLarge"),
-        },
-        400
-      );
-    }
-
-    if (!cvText.trim()) {
-      return c.json(
-        {
-          success: false,
-          error: "Could not extract text from PDF",
-        },
-        400
-      );
-    }
-
-    // Extract profile data using AI
-    const analysisResult = await aiService.analyzeCVText(cvText);
     if (!analysisResult.success) {
       return c.json(
         {
@@ -106,6 +179,13 @@ ai.post("/profile-autofill", async (c) => {
         500
       );
     }
+
+    console.log("✅ AI analysis complete, returning data:", {
+      intendedCountry: analysisResult.data?.intendedCountry,
+      budgetMin: analysisResult.data?.budgetMin,
+      budgetMax: analysisResult.data?.budgetMax,
+    });
+
     return c.json({
       success: true,
       data: analysisResult.data,

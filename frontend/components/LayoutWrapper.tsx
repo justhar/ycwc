@@ -53,6 +53,10 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const getBreadcrumbKey = (path: string) => {
     // Remove locale prefix if present
     const pathWithoutLocale = path.replace(/^\/(id|en)/, "");
+    // Handle dynamic chat route: /chat/[id] should match /chat
+    if (pathWithoutLocale.startsWith("/chat")) {
+      return "chat";
+    }
     return ROUTE_BREADCRUMBS[pathWithoutLocale] || "home";
   };
 
@@ -75,9 +79,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="flex-1">
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+      <main className="flex-1 flex flex-col">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4 w-full">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
@@ -98,7 +102,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex-1 h-[calc(100vh-4rem)]">{children}</div>
+        <div className="flex-1 overflow-hidden">{children}</div>
       </main>
     </SidebarProvider>
   );

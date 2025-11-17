@@ -108,7 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setProfileLoading(true);
     try {
+      console.log("🔵 fetchProfile() called");
       const profileData = await getUserProfile(token);
+      console.log("✅ fetchProfile() received:", {
+        hasProfile: !!profileData.profile,
+        intendedCountry: profileData.profile?.intendedCountry,
+        budgetMin: profileData.profile?.budgetMin,
+      });
       setProfile(profileData.profile);
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -203,10 +209,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setProfileLoading(true);
       try {
+        console.log("🔵 updateProfile() called with data:", {
+          intendedCountry: profileData.intendedCountry,
+          budgetMin: profileData.budgetMin,
+          budgetMax: profileData.budgetMax,
+        });
+
         const response = await updateUserProfile(token, profileData);
+
+        console.log("✅ updateProfile() response:", {
+          intendedCountry: response.profile?.intendedCountry,
+          budgetMin: response.profile?.budgetMin,
+        });
+
         setProfile(response.profile);
         return { success: true };
       } catch (error: any) {
+        console.error("❌ updateProfile() error:", error);
         return { success: false, error: error.message };
       } finally {
         setProfileLoading(false);

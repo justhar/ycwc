@@ -42,6 +42,8 @@ export default function Home() {
             alt="Abroadly Logo"
             width={30}
             height={30}
+            priority
+            fetchPriority="high"
             className="inline-block mr-1.5"
           />
           <p className="font-semibold text-xl text-orange-500">Abroadly</p>
@@ -103,6 +105,8 @@ export default function Home() {
               alt="Browsing"
               width={720}
               height={500}
+              priority
+              fetchPriority="high"
               className="absolute md:-right-20 top-0 w-[120%] h-full object-cover rounded-lg"
             />
           </div>
@@ -190,6 +194,8 @@ export default function Home() {
                 alt="Tracker Preview"
                 width={1920}
                 height={1080}
+                priority
+                fetchPriority="high"
                 className="w-full rounded-lg"
               />
             </div>
@@ -204,6 +210,8 @@ export default function Home() {
             <Image
               src="/logo.svg"
               alt="Abroadly Logo"
+              priority
+              fetchPriority="high"
               width={30}
               height={30}
               className="mr-2"

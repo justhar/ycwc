@@ -7,6 +7,8 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { useAuth } from "../app/contexts/AuthContext";
 import {
   Chat,
@@ -34,6 +36,8 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const locale = useLocale();
   const { token, user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
@@ -59,10 +63,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const userChats = await getUserChats(token);
       setChats(userChats);
 
-      // If no current chat is selected and we have chats, select the most recent one
-      if (!currentChatId && userChats.length > 0) {
-        await selectChat(userChats[0].id);
-      }
+      // Don't auto-select a chat - let the component/route handle that
     } catch (error) {
       console.error("Failed to load chats:", error);
     } finally {
@@ -75,11 +76,30 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     const newChat = await createChat(token);
     setChats((prev) => [newChat, ...prev]);
-    await selectChat(newChat.id);
+
+    // Load messages without navigation (we'll handle navigation in the caller)
+    setCurrentChatId(newChat.id);
+    setLoading(true);
+    try {
+      const messages = await getChatMessages(token, newChat.id);
+      setCurrentMessages(messages);
+    } catch (error) {
+      console.error("Failed to load chat messages:", error);
+      setCurrentMessages([]);
+    } finally {
+      setLoading(false);
+    }
+
+    // Navigate to the new chat
+    router.push(`/${locale}/chat/${newChat.id}`);
+
     return newChat.id;
   };
 
-  const selectChat = async (chatId: string) => {
+  const selectChat = async (
+    chatId: string,
+    shouldNavigate: boolean = false
+  ) => {
     setCurrentChatId(chatId);
     if (!token) return;
 
@@ -87,6 +107,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     try {
       const messages = await getChatMessages(token, chatId);
       setCurrentMessages(messages);
+
+      // Navigate to the chat detail page only if specified
+      if (shouldNavigate) {
+        router.push(`/${locale}/chat/${chatId}`);
+      }
     } catch (error) {
       console.error("Failed to load chat messages:", error);
       setCurrentMessages([]);
