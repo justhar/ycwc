@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   UniversityMatch,
   SuggestedUniversity,
+  University,
   getUserFavorites,
   addToFavorites,
   removeFromFavorites,
@@ -129,7 +130,15 @@ export default function MatchResultsPage() {
           // Revert optimistic update on error
           setFavoriteIds((prev) => new Set([...prev, universityId]));
           if (university) {
-            setFavorites((prev) => [...prev, { university }]);
+            setFavorites((prev) => [
+              ...prev,
+              {
+                id: `fav_${universityId}`,
+                userId: "",
+                university,
+                createdAt: new Date().toISOString(),
+              },
+            ]);
           }
         }
       } else {
@@ -297,7 +306,7 @@ export default function MatchResultsPage() {
                       Strengths
                     </h4>
                     <ul className="text-sm space-y-1">
-                      {match.strengths.map((strength, i) => (
+                      {match.strengths.map((strength: string, i: number) => (
                         <li key={i} className="flex items-start gap-2">
                           <span className="text-green-500">•</span>
                           {strength}
@@ -311,7 +320,7 @@ export default function MatchResultsPage() {
                       Considerations
                     </h4>
                     <ul className="text-sm space-y-1">
-                      {match.concerns.map((concern, i) => (
+                      {match.concerns.map((concern: string, i: number) => (
                         <li key={i} className="flex items-start gap-2">
                           <span className="text-orange-500">•</span>
                           {concern}

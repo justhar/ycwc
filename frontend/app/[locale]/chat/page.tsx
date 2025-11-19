@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { getCurrentLocale } from "@/lib/api";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -212,7 +211,7 @@ export default function ChatPage() {
   };
 
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInputValue(e.target.value);
     },
     []

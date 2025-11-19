@@ -99,8 +99,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     await createGroup(
       {
         name: newGroup.name,
-        description: newGroup.description,
         color: newGroup.color,
+        displayOrder: 0,
       },
       token
     );
@@ -350,7 +350,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     >
                       <div
                         onClick={() => {
-                          selectChat(chat.id, false);
+                          selectChat(chat.id);
                           router.push(getLocaleHref(`/chat/${chat.id}`));
                         }}
                         className="cursor-pointer"

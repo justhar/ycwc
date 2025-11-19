@@ -52,6 +52,7 @@ export interface Favorite {
 }
 
 export interface SuggestedUniversity {
+  id?: string;
   name: string;
   location: string;
   country: string;
@@ -59,6 +60,7 @@ export interface SuggestedUniversity {
   estimatedMatchScore: number;
   specialties: string[];
   type: string;
+  source?: "ai_suggested" | "manual";
   ranking?: number;
   studentCount?: number;
   establishedYear?: number;

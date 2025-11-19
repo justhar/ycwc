@@ -3,6 +3,7 @@ import type {
   UserProfile,
   Favorite,
   UniversityMatch,
+  University,
   AIScholarship,
   SuggestedUniversity,
   MatchingResponse,
@@ -661,4 +662,19 @@ export const sendChatMessage = async (
   }
 
   return response.json();
+};
+
+// Re-export types for convenience
+export type {
+  Favorite,
+  UniversityMatch,
+  SuggestedUniversity,
+  University,
+  ScholarshipFavorite,
+  Task,
+  Subtask,
+  TaskGroup,
+  TaskPriority,
+  TaskStatus,
+  TaskType,
 };

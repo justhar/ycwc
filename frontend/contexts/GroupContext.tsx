@@ -15,26 +15,18 @@ import {
 } from "@/lib/api";
 import type { TaskGroup, GroupContextType } from "@/types";
 
-export interface Group {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  taskIds?: string[];
-}
-
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
 export function GroupProvider({ children }: { children: ReactNode }) {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<TaskGroup[]>([]);
   const [loading, setLoading] = useState(false);
 
   const createGroup = useCallback(
-    async (groupData: Omit<Group, "id" | "taskIds">, token: string) => {
+    async (groupData: Omit<TaskGroup, "id" | "userId" | "createdAt" | "updatedAt" | "taskCount">, token: string) => {
       setLoading(true);
       try {
         const newGroup = await createTaskGroup(token, groupData);
-        setGroups((prev) => [...prev, { ...newGroup, taskIds: [] }]);
+        setGroups((prev) => [...prev, newGroup]);
       } catch (error) {
         console.error("Failed to create group:", error);
         throw error;
@@ -46,14 +38,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   );
 
   const updateGroup = useCallback(
-    async (groupId: string, updates: Partial<Group>, token: string) => {
+    async (groupId: string, updates: Partial<TaskGroup>, token: string) => {
       setLoading(true);
       try {
         const updatedGroup = await updateTaskGroup(token, groupId, updates);
         setGroups((prev) =>
           prev.map((group) =>
             group.id === groupId
-              ? { ...updatedGroup, taskIds: group.taskIds }
+              ? updatedGroup
               : group
           )
         );

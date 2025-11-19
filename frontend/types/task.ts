@@ -11,6 +11,8 @@ export interface Subtask {
   taskId: string;
   title: string;
   completed: boolean;
+  description?: string | null;
+  priority?: string;
   createdAt: string;
 }
 
@@ -23,6 +25,8 @@ export interface Task {
   status: TaskStatus;
   type: TaskType;
   groupIds?: string[];
+  dueDate?: string | null;
+  notes?: string | null;
   deadline?: string;
   createdAt: string;
   updatedAt: string;
@@ -33,7 +37,7 @@ export interface TaskGroup {
   id: string;
   userId?: number;
   name: string;
-  color?: string;
+  color: string;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;

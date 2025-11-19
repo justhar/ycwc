@@ -52,9 +52,9 @@ interface University {
   acceptanceRate: string; // Changed from number to string to match backend decimal
   description: string;
   website: string;
-  source: string;
+  source?: string;
   imageUrl?: string;
-  specialties: string[];
+  specialties?: string[];
   campusSize?: string;
   // Additional backend fields
   roomBoardCost?: string;
@@ -248,7 +248,7 @@ export default function UnivCard({
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {university.specialties.slice(0, 3).map((specialty) => (
+                    {(university.specialties || []).slice(0, 3).map((specialty) => (
                       <Badge
                         key={specialty}
                         variant="secondary"
@@ -257,9 +257,9 @@ export default function UnivCard({
                         {specialty}
                       </Badge>
                     ))}
-                    {university.specialties.length > 3 && (
+                    {(university.specialties?.length || 0) > 3 && (
                       <Badge variant="secondary" className="text-xs">
-                        +{university.specialties.length - 3} more
+                        +{(university.specialties?.length || 0) - 3} more
                       </Badge>
                     )}
                   </div>
@@ -435,7 +435,7 @@ export default function UnivCard({
                 <div>
                   <h4 className="font-semibold mb-2">Specialties</h4>
                   <div className="flex flex-wrap gap-1">
-                    {university.specialties.map((specialty) => (
+                    {(university.specialties || []).map((specialty) => (
                       <Badge
                         key={specialty}
                         variant="secondary"

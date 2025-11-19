@@ -80,7 +80,7 @@ interface University {
   description: string;
   website: string;
   imageUrl?: string;
-  specialties: string[];
+  specialties?: string[];
   campusSize?: string;
   source?: string; // Added for AI-generated vs manual entries
   // Additional backend fields
@@ -987,7 +987,7 @@ export default function SearchPage() {
                       }}
                       savedItems={Array.from(favoriteIds)}
                       onToggleSaved={toggleSaved}
-                      onSelectUniversity={setSelectedUniversity}
+                      onSelectUniversity={(uni) => setSelectedUniversity(uni)}
                       userToken={token ? token : undefined}
                     />
                   ))}

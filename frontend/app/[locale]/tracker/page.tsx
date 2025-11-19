@@ -116,7 +116,7 @@ const cn = (...classes: Array<string | boolean | undefined | null>) =>
 
 // Priority badge component
 const PriorityBadge = ({ priority }: { priority: TaskPriority }) => {
-  const colors = {
+  const colors: Record<TaskPriority, string> = {
     MUST: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400",
     NEED: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400",
     NICE: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400",
@@ -366,7 +366,7 @@ export default function ApplicationTracker() {
           task.id === taskId
             ? {
                 ...task,
-                subtasks: task.subtasks?.map((subtask) =>
+                subtasks: task.subtasks?.map((subtask: Subtask) =>
                   subtask.id === subtaskId ? updatedSubtask : subtask
                 ),
               }
@@ -401,7 +401,10 @@ export default function ApplicationTracker() {
 
   // Task group management functions
   const handleCreateGroup = async (
-    groupData: Omit<Group, "id" | "taskIds">
+    groupData: Omit<
+      TaskGroup,
+      "id" | "createdAt" | "updatedAt" | "userId" | "taskCount"
+    >
   ) => {
     if (!token) return;
     await createGroup(groupData, token);
@@ -532,7 +535,7 @@ export default function ApplicationTracker() {
 
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
-    const subtask = task?.subtasks?.find((s) => s.id === subtaskId);
+    const subtask = task?.subtasks?.find((s: Subtask) => s.id === subtaskId);
     if (!task || !subtask) return;
 
     handleUpdateSubtask(taskId, subtaskId, { completed: !subtask.completed });
@@ -546,9 +549,12 @@ export default function ApplicationTracker() {
       title: newTask.title,
       priority: newTask.priority || "MUST",
       status: "todo",
+      type: "GLOBAL",
       dueDate: newTask.dueDate,
       notes: newTask.notes,
       groupIds: newTask.groupIds || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     handleCreateTask(taskData);
@@ -569,6 +575,8 @@ export default function ApplicationTracker() {
       description: newSubtask.description,
       priority: newSubtask.priority,
       completed: false,
+      taskId: selectedTask.id,
+      createdAt: new Date().toISOString(),
     };
 
     handleCreateSubtask(selectedTask.id, subtaskData);
@@ -681,7 +689,7 @@ export default function ApplicationTracker() {
         saveProfileSnapshot(currentProfileSnapshot);
 
         // The response now has a 'recommendations' field with flat array of tasks
-        const recommendedTasks = response.recommendations.recommendations || [];
+        const recommendedTasks = (response as any).recommendations?.recommendations || [];
 
         localStorage.setItem(
           "recommendationTasks",
@@ -973,12 +981,12 @@ export default function ApplicationTracker() {
                                       Subtasks (
                                       {
                                         task.subtasks.filter(
-                                          (st) => st.completed
+                                          (st: Subtask) => st.completed
                                         ).length
                                       }
                                       /{task.subtasks.length})
                                     </p>
-                                    {task.subtasks.map((subtask) => (
+                                    {task.subtasks.map((subtask: Subtask) => (
                                       <div
                                         key={subtask.id}
                                         className="flex items-center gap-2 text-xs"
@@ -1145,7 +1153,7 @@ export default function ApplicationTracker() {
                                         <div className="flex items-center gap-1 flex-wrap">
                                           {task.groupIds &&
                                           task.groupIds.length > 0 ? (
-                                            task.groupIds.map((groupId) => {
+                                            task.groupIds.map((groupId: string) => {
                                               const group = groups.find(
                                                 (g) => g.id === groupId
                                               );
@@ -1196,12 +1204,12 @@ export default function ApplicationTracker() {
                                             Subtasks (
                                             {
                                               task.subtasks.filter(
-                                                (st) => st.completed
+                                                (st: Subtask) => st.completed
                                               ).length
                                             }
                                             /{task.subtasks.length})
                                           </p>
-                                          {task.subtasks.map((subtask) => (
+                                          {task.subtasks.map((subtask: Subtask) => (
                                             <div
                                               key={subtask.id}
                                               className="flex items-center gap-2 text-xs"
@@ -1385,7 +1393,7 @@ export default function ApplicationTracker() {
               <DialogDescription>
                 Groups:{" "}
                 {selectedTask?.groupIds
-                  ?.map((id) => groups.find((g) => g.id === id)?.name)
+                  ?.map((id: string) => groups.find((g) => g.id === id)?.name)
                   .filter(Boolean)
                   .join(", ") || "No groups"}
               </DialogDescription>
@@ -1395,7 +1403,7 @@ export default function ApplicationTracker() {
                 <div>
                   <h4 className="font-medium mb-2">Groups</h4>
                   <div className="flex flex-wrap gap-2 items-center">
-                    {selectedTask.groupIds?.map((groupId) => {
+                    {selectedTask.groupIds?.map((groupId: string) => {
                       const group = groups.find((g) => g.id === groupId);
                       return group ? (
                         <div
@@ -1821,7 +1829,7 @@ export default function ApplicationTracker() {
 
                   {showSubtasks && (
                     <div className="space-y-3">
-                      {selectedTask.subtasks?.map((subtask) => (
+                      {selectedTask.subtasks?.map((subtask: Subtask) => (
                         <div
                           key={subtask.id}
                           className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"

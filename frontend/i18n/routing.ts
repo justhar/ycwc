@@ -6,7 +6,4 @@ export const routing = defineRouting({
 
   // Used when no locale matches
   defaultLocale: "id",
-
-  // Set default time zone globally to avoid markup mismatches
-  timeZone: "Asia/Jakarta",
 });
