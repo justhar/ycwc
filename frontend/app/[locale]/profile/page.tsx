@@ -1,300 +1,46 @@
 "use client";
 
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import React, { useState, useEffect, useCallback } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { Separator } from "@/components/ui/separator";
-import {
-  Dropzone,
-  DropzoneContent,
-  DropzoneEmptyState,
-} from "@/components/ui/shadcn-io/dropzone";
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Cloud,
-  GraduationCap,
-  WandSparkles,
-  SquarePen,
-  Plus,
-  X,
-  Sparkles,
-  Star,
-} from "lucide-react";
-import {
-  Empty,
-  EmptyContent,
-  EmptyHeader,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import UnivCard from "@/components/UnivCard";
-import { debounce } from "lodash";
 import {
   getUserFavorites,
   removeFromFavorites,
-  Favorite,
   getScholarshipFavorites,
   removeScholarshipFromFavorites,
-  ScholarshipFavorite,
 } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ScholarshipCard from "@/components/ScholarshipCard";
-import Link from "next/link";
+import type { Favorite, ScholarshipFavorite } from "@/types";
 import { useTranslations } from "next-intl";
-import { extractTextFromPDF } from "@/lib/pdf-utils";
+import type { University } from "@/types";
+import {
+  CVUploadSection,
+  IdentitySection,
+  AcademicSection,
+  PreferencesSection,
+  EnglishTestSection,
+  StandardizedTestSection,
+  AwardsSection,
+  ExtracurricularsSection,
+  FavoritesPanel,
+} from "@/components/profile";
 
-// Isolated Input Components
-interface ControlledInputProps {
-  value?: string;
-  placeholder?: string;
-  type?: string;
-  onUpdate: (value: string) => void;
-  className?: string;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-function ControlledInput({
-  value: initialValue = "",
-  placeholder,
-  type = "text",
-  onUpdate,
-  className,
-}: ControlledInputProps) {
-  const [value, setValue] = useState(initialValue);
-  const updateRef = useRef<string>(initialValue);
-
-  // Debounced update function
-  const debouncedUpdate = useCallback(
-    debounce((val: string) => {
-      onUpdate(val);
-    }, 300),
-    [onUpdate]
-  );
-
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
-      setValue(newValue);
-      updateRef.current = newValue;
-      debouncedUpdate(newValue);
-    },
-    [debouncedUpdate]
-  );
-
-  // Update local state when external value changes
-  useEffect(() => {
-    if (initialValue !== updateRef.current) {
-      setValue(initialValue);
-      updateRef.current = initialValue;
-    }
-  }, [initialValue]);
-
-  return (
-    <Input
-      value={value}
-      onChange={handleChange}
-      placeholder={placeholder}
-      type={type}
-      className={className}
-    />
-  );
-}
-
-interface ControlledSelectProps {
-  value?: string;
-  onUpdate: (value: string) => void;
-  placeholder?: string;
-  children: React.ReactNode;
-  className?: string;
-}
-
-function ControlledSelect({
-  value: initialValue = "",
-  onUpdate,
-  placeholder,
-  children,
-  className,
-}: ControlledSelectProps) {
-  const [value, setValue] = useState(initialValue);
-  const updateRef = useRef<string>(initialValue);
-
-  // Debounced update function
-  const debouncedUpdate = useCallback(
-    debounce((val: string) => {
-      onUpdate(val);
-    }, 300),
-    [onUpdate]
-  );
-
-  const handleChange = useCallback(
-    (newValue: string) => {
-      setValue(newValue);
-      updateRef.current = newValue;
-      debouncedUpdate(newValue);
-    },
-    [debouncedUpdate]
-  );
-
-  // Update local state when external value changes
-  useEffect(() => {
-    if (initialValue !== updateRef.current) {
-      setValue(initialValue);
-      updateRef.current = initialValue;
-    }
-  }, [initialValue]);
-
-  return (
-    <Select value={value} onValueChange={handleChange}>
-      <SelectTrigger className={className}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      {children}
-    </Select>
-  );
-}
-
-interface ControlledTextareaProps {
-  value?: string;
-  placeholder?: string;
-  onUpdate: (value: string) => void;
-  className?: string;
-}
-
-function ControlledTextarea({
-  value: initialValue = "",
-  placeholder,
-  onUpdate,
-  className,
-}: ControlledTextareaProps) {
-  const [value, setValue] = useState(initialValue);
-  const updateRef = useRef<string>(initialValue);
-
-  // Debounced update function
-  const debouncedUpdate = useCallback(
-    debounce((val: string) => {
-      onUpdate(val);
-    }, 300),
-    [onUpdate]
-  );
-
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newValue = e.target.value;
-      setValue(newValue);
-      updateRef.current = newValue;
-      debouncedUpdate(newValue);
-    },
-    [debouncedUpdate]
-  );
-
-  // Update local state when external value changes
-  useEffect(() => {
-    if (initialValue !== updateRef.current) {
-      setValue(initialValue);
-      updateRef.current = initialValue;
-    }
-  }, [initialValue]);
-
-  return (
-    <Textarea
-      value={value}
-      onChange={handleChange}
-      placeholder={placeholder}
-      className={className}
-    />
-  );
-}
-
-interface University {
-  id: string;
-  name: string;
-  location: string;
-  country: string;
-  ranking: number;
-  studentCount: number;
-  establishedYear: number;
-  type: "public" | "private";
-  tuitionRange: string;
-  acceptanceRate: string; // Changed from number to string to match backend decimal
-  description: string;
-  website: string;
-  imageUrl?: string;
-  specialties: string[];
-  campusSize?: string;
-  // Additional backend fields
-  roomBoardCost?: string;
-  booksSuppliesCost?: string;
-  personalExpensesCost?: string;
-  facilitiesInfo?: {
-    library?: string;
-    recreationCenter?: string;
-    researchLabs?: string;
-    healthServices?: string;
-    [key: string]: string | undefined;
-  };
-  housingOptions?: string[];
-  studentOrganizations?: string[];
-  diningOptions?: string[];
-  transportationInfo?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface Program {
-  id: string;
-  name: string;
-  degree: "bachelor" | "master" | "phd";
-  duration: string;
-  tuition: string;
-  description: string;
-  requirements: string[];
-  careerProspects: string[];
-  universityId: string;
-}
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
-
-export default function DashboardPage() {
+export default function ProfilePage() {
+  const t = useTranslations("profile");
   const {
     user,
     profile,
-    profileLoading,
-    fetchProfile,
     updateProfile,
     updateUserInformation,
+    fetchProfile,
+    profileLoading,
     token,
   } = useAuth();
-  const t = useTranslations("profile");
-  const [files, setFiles] = useState<File[] | undefined>();
-
-  const [selectedUniversity, setSelectedUniversity] =
-    useState<University | null>(null);
-  const [savedItems, setSavedItems] = useState<string[]>([]);
 
   // Favorites state
+  const [savedItems, setSavedItems] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [scholarshipFavorites, setScholarshipFavorites] = useState<
     ScholarshipFavorite[]
@@ -335,7 +81,7 @@ export default function DashboardPage() {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Update local state when profile changes - only once, not on every render
+  // Update local state when profile changes
   useEffect(() => {
     if (profile) {
       setProfileData((prev) => ({
@@ -380,7 +126,6 @@ export default function DashboardPage() {
           // Load university favorites
           const favorites = await getUserFavorites(token);
           setFavorites(favorites);
-          // Update savedItems for backward compatibility with UnivCard
           const favoriteIds = favorites.map((fav) => fav.university.id);
           setSavedItems(favoriteIds);
 
@@ -426,6 +171,10 @@ export default function DashboardPage() {
   const [activityPeriod, setActivityPeriod] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
 
+  // AI autofill section visibility state
+  const [showAISection, setShowAISection] = useState(false);
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
+
   const toggleSaved = async (id: string) => {
     if (!token) {
       toast.error("Authentication required");
@@ -436,14 +185,11 @@ export default function DashboardPage() {
       const isSaved = savedItems.includes(id);
 
       if (isSaved) {
-        // Remove from favorites
         await removeFromFavorites(token, id);
         setSavedItems((prev) => prev.filter((item) => item !== id));
         setFavorites((prev) => prev.filter((fav) => fav.university.id !== id));
         toast.success("University removed from favorites");
       } else {
-        // This shouldn't happen in the profile page since we only show existing favorites
-        // But we'll handle it for consistency
         setSavedItems((prev) => [...prev, id]);
       }
     } catch (error) {
@@ -459,7 +205,6 @@ export default function DashboardPage() {
     }
 
     try {
-      // Remove from scholarship favorites (since we're only showing existing favorites in profile)
       await removeScholarshipFromFavorites(token, scholarshipId);
       setScholarshipFavorites((prev) =>
         prev.filter((fav) => fav.id !== scholarshipId)
@@ -471,23 +216,17 @@ export default function DashboardPage() {
     }
   };
 
-  // AI autofill section visibility state
-  const [showAISection, setShowAISection] = useState(false);
-  const [isAIProcessing, setIsAIProcessing] = useState(false);
-
   const handleDrop = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return;
 
       const file = files[0];
 
-      // Validate file type
       if (file.type !== "application/pdf") {
         toast.error("Only PDF files are supported");
         return;
       }
 
-      // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
         toast.error("File size must be less than 10MB");
         return;
@@ -500,7 +239,6 @@ export default function DashboardPage() {
       });
 
       try {
-        // Send file directly to backend using FormData
         const formData = new FormData();
         formData.append("file", file);
 
@@ -520,10 +258,8 @@ export default function DashboardPage() {
         }
 
         if (result.success && result.data) {
-          // Map AI response to profile data
           const aiData = result.data;
 
-          // Update profile data with AI results
           setProfileData((prev) => ({
             ...prev,
             fullName: aiData.fullName || prev.fullName,
@@ -540,7 +276,6 @@ export default function DashboardPage() {
             academicScore: aiData.gpa || prev.academicScore,
           }));
 
-          // Update arrays separately, ensuring each item has a unique ID
           if (aiData.englishTests && aiData.englishTests.length > 0) {
             const testsWithIds = aiData.englishTests.map(
               (test: any, index: number) => ({
@@ -581,21 +316,23 @@ export default function DashboardPage() {
             setExtracurriculars(activitiesWithIds);
           }
 
-          // Save all AI-extracted data to the cloud
           try {
-            // Update user basic info if changed
             if (aiData.fullName && aiData.fullName !== user?.fullName) {
               const userResult = await updateUserInformation({
                 fullName: aiData.fullName,
               });
-              if (!userResult.success) {
+              if (userResult.success) {
+                // Update local profileData with new fullName immediately
+                setProfileData((prev) => ({
+                  ...prev,
+                  fullName: aiData.fullName,
+                }));
+              } else {
                 console.warn("Failed to update user info:", userResult.error);
               }
             }
 
-            // Prepare the complete profile update with all data
             const updatedData = {
-              // Basic profile data
               dateOfBirth: aiData.dateOfBirth || profile?.dateOfBirth,
               nationality:
                 aiData.nationality || profile?.nationality || "Indonesia",
@@ -607,10 +344,8 @@ export default function DashboardPage() {
               budgetMax: aiData.budgetMax || profile?.budgetMax,
               institution: aiData.institution || profile?.institution,
               graduationYear: aiData.graduationYear || profile?.graduationYear,
-              academicScore: aiData.academicScore || profile?.academicScore,
-              scoreScale: aiData.scoreScale || profile?.scoreScale,
-
-              // Arrays with processed data
+              academicScore: aiData.gpa || profile?.academicScore,
+              scoreScale: profile?.scoreScale || "gpa4",
               englishTests:
                 aiData.englishTests && aiData.englishTests.length > 0
                   ? aiData.englishTests.map((test: any, index: number) => ({
@@ -645,24 +380,11 @@ export default function DashboardPage() {
                   : extracurriculars,
             };
 
-            // Save to cloud using existing update function
-            console.log("🔵 About to call updateProfile() with:", {
-              intendedCountry: updatedData.intendedCountry,
-              budgetMin: updatedData.budgetMin,
-              budgetMax: updatedData.budgetMax,
-              englishTestsCount: updatedData.englishTests?.length,
-            });
-
             const profileResult = await updateProfile(updatedData);
-
-            console.log("✅ updateProfile result:", profileResult);
 
             if (profileResult.success) {
               toast.success("Profile data extracted and saved successfully!");
-              // Refresh profile from server to ensure sync
-              console.log("🔵 Calling fetchProfile() to refresh from server");
               await fetchProfile();
-              console.log("✅ fetchProfile() completed");
             } else {
               toast.error(
                 profileResult.error || "Failed to save profile data to cloud"
@@ -675,7 +397,7 @@ export default function DashboardPage() {
             );
           }
 
-          setShowAISection(false); // Hide AI section after success
+          // Keep AI section visible so user can see uploaded data persisted
         } else {
           throw new Error("No data received from AI service");
         }
@@ -686,10 +408,8 @@ export default function DashboardPage() {
         );
       } finally {
         setIsAIProcessing(false);
-        toast.dismiss(); // Dismiss any remaining loading toasts
+        toast.dismiss();
       }
-
-      setFiles(files);
     },
     [
       user?.fullName,
@@ -701,10 +421,10 @@ export default function DashboardPage() {
       updateUserInformation,
       updateProfile,
       fetchProfile,
+      token,
     ]
   );
 
-  // Memoized input change handlers to prevent lag
   const handleProfileChange = useCallback((field: string, value: string) => {
     setProfileData((prev) => ({
       ...prev,
@@ -712,11 +432,9 @@ export default function DashboardPage() {
     }));
   }, []);
 
-  // Helper function to create complete profile updates
   const createProfileUpdate = useCallback(
     (updates: Partial<typeof profile>) => {
       return {
-        // Include all current profile data
         dateOfBirth: profile?.dateOfBirth,
         nationality: profile?.nationality,
         targetLevel: profile?.targetLevel,
@@ -732,17 +450,14 @@ export default function DashboardPage() {
         standardizedTests: standardizedTests,
         awards: awards,
         extracurriculars: extracurriculars,
-        // Override with updates
         ...updates,
       };
     },
     [profile, englishTests, standardizedTests, awards, extracurriculars]
   );
 
-  // Memoized save handlers
   const handleSaveIdentity = useCallback(async () => {
     try {
-      // Update user basic info if fullName changed
       if (profileData.fullName !== user?.fullName) {
         const userResult = await updateUserInformation({
           fullName: profileData.fullName,
@@ -753,7 +468,6 @@ export default function DashboardPage() {
         }
       }
 
-      // Update profile with identity data
       const profileResult = await updateProfile(
         createProfileUpdate({
           dateOfBirth: profileData.dateOfBirth || undefined,
@@ -857,7 +571,6 @@ export default function DashboardPage() {
     createProfileUpdate,
   ]);
 
-  // Add test handlers
   const handleAddEnglishTest = useCallback(async () => {
     if (!selectedEnglishTestType || !englishTestScore || !englishTestDate) {
       toast.error("Please fill in all required fields");
@@ -1052,7 +765,6 @@ export default function DashboardPage() {
     createProfileUpdate,
   ]);
 
-  // Remove handlers
   const handleRemoveEnglishTest = useCallback(
     async (testId: string) => {
       const updatedTests = englishTests.filter((t: any) => t.id !== testId);
@@ -1163,908 +875,142 @@ export default function DashboardPage() {
     <ProtectedRoute>
       <div className="mx-2">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-y-2">
-          <div className=" rounded-lg p-4 col-span-2">
-            <h2 className="font-semibold text-2xl my-2 flex gap-4 items-center flex-row">
-              {t("yourProfile")}{" "}
-              <Button
-                onClick={() => setShowAISection(!showAISection)}
-                className="text-zinc-900 hover:bg-transparent cursor-pointer hover:shadow-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800"
-              >
-                {t("autofill")} <Sparkles className="h-4 w-4 ml-2" />
-              </Button>
-            </h2>
-            <p className="text-zinc-500">{t("completeProfile")}</p>
-            {/* <Separator className="my-2" /> */}
+          <div className="rounded-lg p-4 col-span-2">
+            <CVUploadSection
+              showAISection={showAISection}
+              isAIProcessing={isAIProcessing}
+              onToggleAISection={() => setShowAISection(!showAISection)}
+              onDrop={handleDrop}
+              token={token || undefined}
+              t={t}
+            />
 
-            {showAISection && (
-              <div className="border border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-blue-50 mb-5 mt-2 p-6 flex items-center flex-col rounded-xl relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 h-8 w-8 p-0"
-                  onClick={() => setShowAISection(false)}
-                >
-                  <X className="size-4" />
-                </Button>
-                <div className="items-center flex flex-col mb-5">
-                  <h4 className="text-xl font-semibold items-center gap-2 flex flex-row">
-                    {t("autofillWithAI")} <WandSparkles className="size-5" />
-                  </h4>
-                  <p className="text-sm text-zinc-500">
-                    {t("autofillDescription")}
-                  </p>
-                </div>
-                <Dropzone
-                  accept={{ "application/pdf": [".pdf"] }}
-                  onDrop={handleDrop}
-                  onError={console.error}
-                  className="border-dashed hover:cursor-pointer"
-                  src={files}
-                  disabled={isAIProcessing}
-                >
-                  {isAIProcessing ? (
-                    <div className="flex flex-col items-center gap-2 p-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                      <p className="text-sm text-zinc-600">
-                        {t("processingCV")}
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <DropzoneEmptyState>
-                        <div className="flex flex-col items-center gap-2">
-                          <Cloud className="size-8 text-zinc-400" />
-                          <p className="text-sm text-zinc-600">
-                            {t("dragDropCV")}
-                          </p>
-                          <p className="text-xs text-zinc-400">
-                            {t("pdfOnly")}
-                          </p>
-                        </div>
-                      </DropzoneEmptyState>
-                      <DropzoneContent />
-                    </>
-                  )}
-                </Dropzone>
-              </div>
-            )}
+            <IdentitySection
+              profileData={{
+                fullName: profileData.fullName,
+                dateOfBirth: profileData.dateOfBirth,
+                nationality: profileData.nationality,
+              }}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              onEdit={setEditingSection}
+              onProfileChange={handleProfileChange}
+              onSave={handleSaveIdentity}
+              t={t}
+            />
 
-            {/* Identitas Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">{t("identity")}</h2>
-              <Dialog
-                open={editingSection === "identitas"}
-                onOpenChange={(open: boolean) =>
-                  setEditingSection(open ? "identitas" : null)
-                }
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <SquarePen className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>{t("editIdentity")}</DialogTitle>
-                    <DialogDescription>
-                      {t("updatePersonalInfo")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label className="mb-2">{t("fullName")}</Label>
-                      <ControlledInput
-                        value={profileData.fullName}
-                        onUpdate={(value) =>
-                          handleProfileChange("fullName", value)
-                        }
-                        placeholder={t("enterFullName")}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">{t("dateOfBirth")}</Label>
-                      <ControlledInput
-                        type="date"
-                        value={profileData.dateOfBirth}
-                        onUpdate={(value) =>
-                          handleProfileChange("dateOfBirth", value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">{t("nationality")}</Label>
-                      <ControlledSelect
-                        value={profileData.nationality}
-                        onUpdate={(value) =>
-                          handleProfileChange("nationality", value)
-                        }
-                        placeholder={t("selectNationality")}
-                      >
-                        <SelectContent>
-                          <SelectItem value="Indonesia">Indonesia</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </ControlledSelect>
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleSaveIdentity}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? t("saving") : t("saveChanges")}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
-              <div>
-                <strong>{t("fullName")}:</strong>{" "}
-                {profileData.fullName || t("notSet")}
-              </div>
-              <div>
-                <strong>{t("dateOfBirth")}:</strong>{" "}
-                {profileData.dateOfBirth || t("notSet")}
-              </div>
-              <div>
-                <strong>{t("nationality")}:</strong> {profileData.nationality}
-              </div>
-            </div>
+            <AcademicSection
+              profileData={{
+                institution: profileData.institution,
+                graduationYear: profileData.graduationYear,
+                academicScore: profileData.academicScore,
+                scoreScale: profileData.scoreScale,
+              }}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              onEdit={setEditingSection}
+              onProfileChange={handleProfileChange}
+              onSave={handleSaveAcademic}
+              t={t}
+            />
 
-            {/* Academic Information Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">
-                {t("academicInformation")}
-              </h2>
-              <Dialog
-                open={editingSection === "academic"}
-                onOpenChange={(open: boolean) =>
-                  setEditingSection(open ? "academic" : null)
-                }
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <SquarePen className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>{t("editAcademicInfo")}</DialogTitle>
-                    <DialogDescription>
-                      {t("updateEducationalBackground")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label className="mb-2">
-                        {t("institution")}{" "}
-                        <span className="text-red-900">*</span>
-                      </Label>
-                      <ControlledInput
-                        value={profileData.institution}
-                        onUpdate={(value) =>
-                          handleProfileChange("institution", value)
-                        }
-                        placeholder={t("schoolUniversityName")}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">{t("graduationYear")}</Label>
-                      <ControlledInput
-                        type="number"
-                        value={profileData.graduationYear}
-                        onUpdate={(value) =>
-                          handleProfileChange("graduationYear", value)
-                        }
-                        placeholder="2024"
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">{t("academicScore")}</Label>
-                      <div className="flex gap-2">
-                        <ControlledInput
-                          value={profileData.academicScore}
-                          onUpdate={(value) =>
-                            handleProfileChange("academicScore", value)
-                          }
-                          placeholder="3.45 or 85"
-                        />
-                        <ControlledSelect
-                          value={profileData.scoreScale}
-                          onUpdate={(value) =>
-                            handleProfileChange("scoreScale", value)
-                          }
-                          className="w-40"
-                        >
-                          <SelectContent>
-                            <SelectItem value="gpa4">{t("gpa4")}</SelectItem>
-                            <SelectItem value="percentage">
-                              {t("percentage")}
-                            </SelectItem>
-                            <SelectItem value="indo">
-                              {t("indoScale")}
-                            </SelectItem>
-                          </SelectContent>
-                        </ControlledSelect>
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleSaveAcademic}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? t("saving") : t("saveChanges")}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
-              <div>
-                <strong>{t("institution")}:</strong>{" "}
-                {profileData.institution || t("notSet")}
-              </div>
-              <div>
-                <strong>{t("graduationYear")}:</strong>{" "}
-                {profileData.graduationYear || t("notSet")}
-              </div>
-              <div>
-                <strong>{t("academicScore")}:</strong>{" "}
-                {profileData.academicScore
-                  ? `${profileData.academicScore} (${profileData.scoreScale})`
-                  : t("notSet")}
-              </div>
-            </div>
+            <PreferencesSection
+              profileData={{
+                targetLevel: profileData.targetLevel,
+                intendedMajor: profileData.intendedMajor,
+                intendedCountry: profileData.intendedCountry,
+                budgetMin: profileData.budgetMin,
+                budgetMax: profileData.budgetMax,
+              }}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              onEdit={setEditingSection}
+              onProfileChange={handleProfileChange}
+              onSave={handleSavePreferences}
+              t={t}
+            />
 
-            {/* Study Abroad Preferences Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">
-                {t("studyAbroadPreferences")}
-              </h2>
-              <Dialog
-                open={editingSection === "preferences"}
-                onOpenChange={(open: boolean) =>
-                  setEditingSection(open ? "preferences" : null)
-                }
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <SquarePen className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>{t("editStudyAbroadPreferences")}</DialogTitle>
-                    <DialogDescription>
-                      {t("updateStudyAbroadPreferences")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label className="mb-2">
-                        {t("targetLevel")}{" "}
-                        <span className="text-red-600">*</span>
-                      </Label>
-                      <ControlledSelect
-                        value={profileData.targetLevel}
-                        onUpdate={(value) =>
-                          handleProfileChange("targetLevel", value)
-                        }
-                        placeholder={t("selectLevel")}
-                      >
-                        <SelectContent>
-                          <SelectItem value="undergraduate">
-                            {t("undergraduate")}
-                          </SelectItem>
-                          <SelectItem value="master">{t("masters")}</SelectItem>
-                          <SelectItem value="phd">{t("phd")}</SelectItem>
-                          <SelectItem value="exchange">
-                            {t("exchange")}
-                          </SelectItem>
-                        </SelectContent>
-                      </ControlledSelect>
-                    </div>
-                    <div>
-                      <Label className="mb-2">
-                        {t("intendedMajor")}{" "}
-                        <span className="text-red-600">*</span>
-                      </Label>
-                      <ControlledInput
-                        value={profileData.intendedMajor}
-                        onUpdate={(value) =>
-                          handleProfileChange("intendedMajor", value)
-                        }
-                        placeholder={t("computerScience")}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">
-                        {t("intendedCountry")}{" "}
-                        <span className="text-red-600">*</span>
-                      </Label>
-                      <ControlledInput
-                        value={profileData.intendedCountry}
-                        onUpdate={(value) =>
-                          handleProfileChange("intendedCountry", value)
-                        }
-                        placeholder={t("unitedStates")}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">{t("budgetRange")}</Label>
-                      <div className="flex gap-2">
-                        <ControlledInput
-                          type="number"
-                          value={profileData.budgetMin}
-                          onUpdate={(value) =>
-                            handleProfileChange("budgetMin", value)
-                          }
-                          placeholder={t("min")}
-                        />
-                        <ControlledInput
-                          type="number"
-                          value={profileData.budgetMax}
-                          onUpdate={(value) =>
-                            handleProfileChange("budgetMax", value)
-                          }
-                          placeholder={t("max")}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleSavePreferences}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? "Saving..." : "Save Changes"}
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-3">
-                    * {t("requiredFieldsLegend")}
-                  </p>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
-              <div>
-                <strong>Target Level:</strong>{" "}
-                {profileData.targetLevel || "Not set"}
-              </div>
-              <div>
-                <strong>Intended Major:</strong>{" "}
-                {profileData.intendedMajor || "Not set"}
-              </div>
-              <div>
-                <strong>Intended Country:</strong>{" "}
-                {profileData.intendedCountry || "Not set"}
-              </div>
-              <div>
-                <strong>Budget Range (Rp):</strong>{" "}
-                {profileData.budgetMin && profileData.budgetMax
-                  ? `${profileData.budgetMin} - ${profileData.budgetMax}`
-                  : "Not set"}
-              </div>
-            </div>
+            <EnglishTestSection
+              englishTests={englishTests}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              selectedEnglishTestType={selectedEnglishTestType}
+              customEnglishTestTitle={customEnglishTestTitle}
+              englishTestScore={englishTestScore}
+              englishTestDate={englishTestDate}
+              onEdit={setEditingSection}
+              onSelectTestType={setSelectedEnglishTestType}
+              onCustomTitleChange={setCustomEnglishTestTitle}
+              onScoreChange={setEnglishTestScore}
+              onDateChange={setEnglishTestDate}
+              onAddTest={handleAddEnglishTest}
+              onRemoveTest={handleRemoveEnglishTest}
+              t={t}
+            />
 
-            {/* English Proficiency Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">
-                {t("englishProficiency")}
-              </h2>
-              <Dialog
-                open={editingSection === "english"}
-                onOpenChange={(open: boolean) => {
-                  setEditingSection(open ? "english" : null);
-                  if (!open) {
-                    setSelectedEnglishTestType("");
-                    setCustomEnglishTestTitle("");
-                    setEnglishTestScore("");
-                    setEnglishTestDate("");
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Plus className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("addEnglishTest")}</DialogTitle>
-                    <DialogDescription>
-                      {t("addNewEnglishTest")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div>
-                      <Label className="mb-2">{t("testType")}</Label>
-                      <ControlledSelect
-                        value={selectedEnglishTestType}
-                        onUpdate={setSelectedEnglishTestType}
-                        placeholder={t("selectTestType")}
-                      >
-                        <SelectContent>
-                          <SelectItem value="toefl">{t("toefl")}</SelectItem>
-                          <SelectItem value="ielts">{t("ielts")}</SelectItem>
-                          <SelectItem value="duolingo">
-                            {t("duolingo")}
-                          </SelectItem>
-                          <SelectItem value="pte">{t("pte")}</SelectItem>
-                          <SelectItem value="other">{t("other")}</SelectItem>
-                        </SelectContent>
-                      </ControlledSelect>
-                    </div>
-                    {selectedEnglishTestType === "other" && (
-                      <div>
-                        <Label className="mb-2">{t("testTitle")}</Label>
-                        <ControlledInput
-                          value={customEnglishTestTitle}
-                          onUpdate={setCustomEnglishTestTitle}
-                          placeholder={t("enterTestName")}
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <Label className="mb-2">{t("score")}</Label>
-                      <ControlledInput
-                        placeholder="110 / 7.5 / 125"
-                        value={englishTestScore}
-                        onUpdate={setEnglishTestScore}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">{t("testDate")}</Label>
-                      <ControlledInput
-                        type="date"
-                        value={englishTestDate}
-                        onUpdate={setEnglishTestDate}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleAddEnglishTest}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? t("adding") : t("addTest")}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="space-y-2 mb-4">
-              {englishTests.map((test) => (
-                <Card key={test.id} className="p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{test.type}</div>
-                      <div className="text-sm text-gray-500">
-                        Score: {test.score} • Date: {test.date}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveEnglishTest(test.id)}
-                      disabled={profileLoading}
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <StandardizedTestSection
+              standardizedTests={standardizedTests}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              selectedStandardizedTestType={selectedStandardizedTestType}
+              customStandardizedTestTitle={customStandardizedTestTitle}
+              standardizedTestScore={standardizedTestScore}
+              standardizedTestDate={standardizedTestDate}
+              onEdit={setEditingSection}
+              onSelectTestType={setSelectedStandardizedTestType}
+              onCustomTitleChange={setCustomStandardizedTestTitle}
+              onScoreChange={setStandardizedTestScore}
+              onDateChange={setStandardizedTestDate}
+              onAddTest={handleAddStandardizedTest}
+              onRemoveTest={handleRemoveStandardizedTest}
+              t={t}
+            />
 
-            {/* Standardized Tests Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">
-                {t("standardizedTests")}
-              </h2>
-              <Dialog
-                open={editingSection === "standardized"}
-                onOpenChange={(open: boolean) => {
-                  setEditingSection(open ? "standardized" : null);
-                  if (!open) {
-                    setSelectedStandardizedTestType("");
-                    setCustomStandardizedTestTitle("");
-                    setStandardizedTestScore("");
-                    setStandardizedTestDate("");
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Plus className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("addStandardizedTest")}</DialogTitle>
-                    <DialogDescription>
-                      {t("addStandardizedTestDesc")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div>
-                      <Label className="mb-2">Test Type</Label>
-                      <ControlledSelect
-                        value={selectedStandardizedTestType}
-                        onUpdate={setSelectedStandardizedTestType}
-                        placeholder="Select test"
-                      >
-                        <SelectContent>
-                          <SelectItem value="sat">SAT</SelectItem>
-                          <SelectItem value="act">ACT</SelectItem>
-                          <SelectItem value="gre">GRE</SelectItem>
-                          <SelectItem value="gmat">GMAT</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </ControlledSelect>
-                    </div>
-                    {selectedStandardizedTestType === "other" && (
-                      <div>
-                        <Label className="mb-2">Test Title</Label>
-                        <ControlledInput
-                          value={customStandardizedTestTitle}
-                          onUpdate={setCustomStandardizedTestTitle}
-                          placeholder="Enter test name"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <Label className="mb-2">Score</Label>
-                      <ControlledInput
-                        placeholder="1400 / 32 / 320 / 700"
-                        value={standardizedTestScore}
-                        onUpdate={setStandardizedTestScore}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">Test Date</Label>
-                      <ControlledInput
-                        type="date"
-                        value={standardizedTestDate}
-                        onUpdate={setStandardizedTestDate}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleAddStandardizedTest}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? "Adding..." : "Add Test"}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="space-y-2 mb-4">
-              {standardizedTests.map((test) => (
-                <Card key={test.id} className="p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{test.type}</div>
-                      <div className="text-sm text-gray-500">
-                        Score: {test.score} • Date: {test.date}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveStandardizedTest(test.id)}
-                      disabled={profileLoading}
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <AwardsSection
+              awards={awards}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              awardTitle={awardTitle}
+              awardYear={awardYear}
+              awardLevel={awardLevel}
+              onEdit={setEditingSection}
+              onTitleChange={setAwardTitle}
+              onYearChange={setAwardYear}
+              onLevelChange={setAwardLevel}
+              onAddAward={handleAddAward}
+              onRemoveAward={handleRemoveAward}
+              t={t}
+            />
 
-            {/* Awards Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">
-                {t("awardsAchievements")}
-              </h2>
-              <Dialog
-                open={editingSection === "awards"}
-                onOpenChange={(open: boolean) => {
-                  setEditingSection(open ? "awards" : null);
-                  if (!open) {
-                    setAwardTitle("");
-                    setAwardYear("");
-                    setAwardLevel("");
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Plus className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("addAward")}</DialogTitle>
-                    <DialogDescription>
-                      {t("addPublicationsCompetitions")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div>
-                      <Label className="mb-2">Title</Label>
-                      <ControlledInput
-                        placeholder="e.g., National Math Olympiad"
-                        value={awardTitle}
-                        onUpdate={setAwardTitle}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">Year</Label>
-                      <ControlledInput
-                        placeholder="2023"
-                        value={awardYear}
-                        onUpdate={setAwardYear}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">Level</Label>
-                      <ControlledSelect
-                        value={awardLevel}
-                        onUpdate={setAwardLevel}
-                        placeholder="Select level"
-                      >
-                        <SelectContent>
-                          <SelectItem value="school">School</SelectItem>
-                          <SelectItem value="local">Local</SelectItem>
-                          <SelectItem value="regional">Regional</SelectItem>
-                          <SelectItem value="national">National</SelectItem>
-                          <SelectItem value="international">
-                            International
-                          </SelectItem>
-                        </SelectContent>
-                      </ControlledSelect>
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleAddAward}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? "Adding..." : "Add Award"}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="space-y-2 mb-4">
-              {awards.map((award) => (
-                <Card key={award.id} className="p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{award.title}</div>
-                      <div className="text-sm text-gray-500">
-                        {award.year} • {award.level}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveAward(award.id)}
-                      disabled={profileLoading}
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            {/* Extracurriculars Section */}
-            <div className="flex items-center justify-between mt-6 mb-2">
-              <h2 className="font-semibold text-xl">{t("extracurriculars")}</h2>
-              <Dialog
-                open={editingSection === "extracurriculars"}
-                onOpenChange={(open: boolean) => {
-                  setEditingSection(open ? "extracurriculars" : null);
-                  if (!open) {
-                    setActivityName("");
-                    setActivityPeriod("");
-                    setActivityDescription("");
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Plus className="size-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("addExtracurricular")}</DialogTitle>
-                    <DialogDescription>
-                      {t("addLeadershipClubs")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div>
-                      <Label className="mb-2">Activity</Label>
-                      <ControlledInput
-                        placeholder="e.g., Student Council President"
-                        value={activityName}
-                        onUpdate={setActivityName}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">Period</Label>
-                      <ControlledInput
-                        placeholder="e.g., 2022-2023"
-                        value={activityPeriod}
-                        onUpdate={setActivityPeriod}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-2">Description (Optional)</Label>
-                      <ControlledTextarea
-                        placeholder="Brief description of your role and achievements"
-                        value={activityDescription}
-                        onUpdate={setActivityDescription}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    onClick={handleAddExtracurricular}
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? "Adding..." : "Add Activity"}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <Separator className="my-2" />
-            <div className="space-y-2 mb-4">
-              {extracurriculars.map((activity) => (
-                <Card key={activity.id} className="p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{activity.activity}</div>
-                      <div className="text-sm text-gray-500">
-                        {activity.period}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveExtracurricular(activity.id)}
-                      disabled={profileLoading}
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <ExtracurricularsSection
+              extracurriculars={extracurriculars}
+              editingSection={editingSection}
+              profileLoading={profileLoading}
+              activityName={activityName}
+              activityPeriod={activityPeriod}
+              activityDescription={activityDescription}
+              onEdit={setEditingSection}
+              onActivityNameChange={setActivityName}
+              onActivityPeriodChange={setActivityPeriod}
+              onActivityDescriptionChange={setActivityDescription}
+              onAddActivity={handleAddExtracurricular}
+              onRemoveActivity={handleRemoveExtracurricular}
+              t={t}
+            />
           </div>
-          <div className="border rounded-lg p-4 my-5 md:mr-4">
-            <h2 className="font-semibold text-2xl flex flex-row items-center gap-2">
-              <Star className="text-yellow-400 " /> {t("myFavorites")}
-            </h2>
-            <Separator className="my-2" />
 
-            <Tabs defaultValue="universities" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger
-                  value="universities"
-                  className="flex items-center gap-2"
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  {t("universities")} ({favorites.length})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="scholarships"
-                  className="flex items-center gap-2"
-                >
-                  <Star className="w-4 h-4" />
-                  {t("scholarships")} ({scholarshipFavorites.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="universities" className="mt-4">
-                {favoritesLoading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                    <span className="ml-2 text-gray-600">
-                      {t("loadingUniversities")}
-                    </span>
-                  </div>
-                ) : favorites.length > 0 ? (
-                  <div className="gap-4 flex flex-col">
-                    {favorites.map((favorite) => (
-                      <UnivCard
-                        key={favorite.university.id}
-                        university={favorite.university}
-                        savedItems={savedItems}
-                        onToggleSaved={toggleSaved}
-                        onSelectUniversity={setSelectedUniversity}
-                        userToken={token || undefined}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <Empty className="w-full">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <GraduationCap />
-                      </EmptyMedia>
-                      <EmptyTitle>{t("noFavoriteUniversities")}</EmptyTitle>
-                      <EmptyDescription>
-                        {t("addFavoriteUniversities")}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <Link href="/match">
-                        <Button className="text-zinc-900 hover:bg-transparent cursor-pointer hover:shadow-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-                          {t("matchWithAI")}{" "}
-                          <Sparkles className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
-                      <p className="text-zinc-500">atau</p>
-                      <Link href="/search">
-                        <Button variant="outline" size="sm">
-                          {t("searchUniversities")}
-                        </Button>
-                      </Link>
-                    </EmptyContent>
-                  </Empty>
-                )}
-              </TabsContent>
-
-              <TabsContent value="scholarships" className="mt-4">
-                {scholarshipFavoritesLoading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                    <span className="ml-2 text-gray-600">
-                      {t("loadingScholarships")}
-                    </span>
-                  </div>
-                ) : scholarshipFavorites.length > 0 ? (
-                  <div className="gap-4 flex flex-col">
-                    {scholarshipFavorites.map((scholarship) => (
-                      <ScholarshipCard
-                        key={scholarship.id}
-                        scholarship={scholarship as any}
-                        savedItems={scholarshipFavorites.map((s) => s.id)}
-                        onToggleSaved={toggleScholarshipSaved}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <Empty className="w-full">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Star />
-                      </EmptyMedia>
-                      <EmptyTitle>{t("noFavoriteScholarships")}</EmptyTitle>
-                      <EmptyDescription>
-                        {t("addFavoriteScholarships")}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <Link href="/search">
-                        <Button variant="outline" size="sm">
-                          {t("searchScholarships")}
-                        </Button>
-                      </Link>
-                    </EmptyContent>
-                  </Empty>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+          <FavoritesPanel
+            favorites={favorites}
+            scholarshipFavorites={scholarshipFavorites}
+            favoritesLoading={favoritesLoading}
+            scholarshipFavoritesLoading={scholarshipFavoritesLoading}
+            savedItems={savedItems}
+            token={token || undefined}
+            onToggleSaved={toggleSaved}
+            onToggleScholarshipSaved={toggleScholarshipSaved}
+            onSelectUniversity={() => {}}
+            t={t}
+          />
         </div>
       </div>
     </ProtectedRoute>

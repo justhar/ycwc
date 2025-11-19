@@ -151,7 +151,7 @@ interface ScholarshipSearchReturn {
 
 // API client functions
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://ycwc-backend.vercel.app";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 const fetchUniversities = async (params?: {
   search?: string;
@@ -303,12 +303,28 @@ export default function SearchPage() {
         ]);
 
         // Set universities and pagination
-        setUniversities(universityData.universities);
-        setUniversityPagination(universityData.pagination);
+        setUniversities(universityData.universities || []);
+        setUniversityPagination(universityData.pagination || {
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
 
         // Set scholarships and pagination
-        setScholarships(scholarshipData.scholarships);
-        setScholarshipPagination(scholarshipData.pagination);
+        setScholarships(scholarshipData.scholarships || []);
+        setScholarshipPagination(scholarshipData.pagination || {
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
         console.error("Error fetching data on mount:", err);
@@ -351,7 +367,7 @@ export default function SearchPage() {
           // Load scholarship favorites
           const userScholarshipFavorites = await getScholarshipFavorites(token);
           const favoriteScholarshipIds = userScholarshipFavorites.map(
-            (scholarship) => scholarship.id
+            (favorite) => favorite.scholarshipId
           );
           setScholarshipFavorites(favoriteScholarshipIds);
         } catch (error) {
@@ -469,8 +485,16 @@ export default function SearchPage() {
           offset: offset.toString(),
         });
 
-        setUniversities(data.universities);
-        setUniversityPagination(data.pagination);
+        setUniversities(data.universities || []);
+        setUniversityPagination(data.pagination || {
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
       } else if (activeTab === "scholarships") {
         const data = await fetchScholarships({
           search: searchTerm || undefined,
@@ -480,12 +504,44 @@ export default function SearchPage() {
           offset: offset.toString(),
         });
 
-        setScholarships(data.scholarships);
-        setScholarshipPagination(data.pagination);
+        setScholarships(data.scholarships || []);
+        setScholarshipPagination(data.pagination || {
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data");
       console.error("Error fetching data:", err);
+      // Initialize pagination with defaults on error
+      if (activeTab === "universities") {
+        setUniversities([]);
+        setUniversityPagination({
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
+      } else if (activeTab === "scholarships") {
+        setScholarships([]);
+        setScholarshipPagination({
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -528,14 +584,31 @@ export default function SearchPage() {
         offset: offset.toString(),
       });
 
-      setUniversities(data.universities);
-      setUniversityPagination(data.pagination);
+      setUniversities(data.universities || []);
+      setUniversityPagination(data.pagination || {
+        total: 0,
+        limit: 20,
+        offset: 0,
+        totalPages: 0,
+        currentPage: 1,
+        hasNext: false,
+        hasPrev: false,
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch universities"
       );
       console.error("Error fetching universities on search:", err);
       setUniversities([]);
+      setUniversityPagination({
+        total: 0,
+        limit: 20,
+        offset: 0,
+        totalPages: 0,
+        currentPage: 1,
+        hasNext: false,
+        hasPrev: false,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -562,14 +635,44 @@ export default function SearchPage() {
         offset: offset.toString(),
       });
 
-      setScholarships(data.scholarships);
-      setScholarshipPagination(data.pagination);
+      setScholarships(data.scholarships || []);
+      setScholarshipPagination(data.pagination || {
+        total: 0,
+        limit: 20,
+        offset: 0,
+        totalPages: 0,
+        currentPage: 1,
+        hasNext: false,
+        hasPrev: false,
+      });
+
+      // Reload scholarship favorites to ensure accurate state
+      if (token) {
+        try {
+          const userScholarshipFavorites = await getScholarshipFavorites(token);
+          const favoriteScholarshipIds = userScholarshipFavorites.map(
+            (favorite) => favorite.scholarshipId
+          );
+          setScholarshipFavorites(favoriteScholarshipIds);
+        } catch (error) {
+          console.error("Error loading scholarship favorites:", error);
+        }
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch scholarships"
       );
       console.error("Error fetching scholarships on search:", err);
       setScholarships([]);
+      setScholarshipPagination({
+        total: 0,
+        limit: 20,
+        offset: 0,
+        totalPages: 0,
+        currentPage: 1,
+        hasNext: false,
+        hasPrev: false,
+      });
     } finally {
       setIsLoading(false);
     }

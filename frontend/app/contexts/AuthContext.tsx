@@ -11,45 +11,13 @@ import {
   getUserProfile,
   updateUserProfile,
   updateUserInfo,
-  ProfileData,
-  UserProfile,
 } from "@/lib/api";
-
-interface User {
-  id: number;
-  fullName: string;
-  email: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  profile: ProfileData | null;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  register: (
-    fullname: string,
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  loading: boolean;
-  profileLoading: boolean;
-  fetchProfile: () => Promise<void>;
-  updateProfile: (
-    profileData: ProfileData
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateUserInformation: (userData: {
-    fullName: string;
-  }) => Promise<{ success: boolean; error?: string }>;
-}
+import type { User, AuthContextType, ProfileData } from "@/types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

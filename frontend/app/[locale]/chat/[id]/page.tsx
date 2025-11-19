@@ -102,7 +102,7 @@ const ChatPageDetail = () => {
       setLoading(true);
 
       try {
-        // Add user message to display immediately
+        // Add user message + typing indicator immediately
         const tempUserMsg: ChatMessage = {
           id: `temp-user-${Date.now()}`,
           role: "user",
@@ -110,21 +110,89 @@ const ChatPageDetail = () => {
           createdAt: new Date().toISOString(),
         };
 
-        setMessages((prev) => [...prev, tempUserMsg]);
+        const typingMsg: ChatMessage = {
+          id: `typing-${Date.now()}`,
+          role: "assistant",
+          content: "...",
+          createdAt: new Date().toISOString(),
+        };
+
+        setMessages((prev) => [...prev, tempUserMsg, typingMsg]);
 
         // Send to API
         const response = await sendChatMessage(token, chatId, userMessage);
 
-        if (response && response.aiMessage) {
-          // Add the AI response to messages
-          setMessages((prev) => [...prev, response.aiMessage]);
+        console.log("Chat response received:", response);
+
+        if (!response) {
+          throw new Error("No response from server");
         }
+
+        // Validate response structure
+        if (!response.userMessage) {
+          console.error("Response missing userMessage:", response);
+          throw new Error("Invalid response: missing userMessage");
+        }
+
+        console.log("User message from response:", response.userMessage);
+        console.log("AI message from response:", response.aiMessage);
+
+        // Replace temp messages with real ones
+        setMessages((prev) => {
+          console.log("Current messages before update:", prev);
+          
+          const filtered = prev.filter(
+            (msg) => !msg.id.startsWith("temp-user-") && !msg.id.startsWith("typing-")
+          );
+          
+          console.log("Filtered messages (temp removed):", filtered);
+          
+          const messagesToAdd: ChatMessage[] = [];
+          
+          // Always add user message if it exists
+          if (response.userMessage) {
+            // Ensure message has all required fields
+            const userMsg: ChatMessage = {
+              id: response.userMessage.id || `user-${Date.now()}`,
+              role: "user",
+              content: response.userMessage.content || "",
+              createdAt: response.userMessage.createdAt || new Date().toISOString(),
+            };
+            messagesToAdd.push(userMsg);
+            console.log("Added user message:", userMsg);
+          }
+          
+          // Add AI message if it exists  
+          if (response.aiMessage) {
+            const aiMsg: ChatMessage = {
+              id: response.aiMessage.id || `ai-${Date.now()}`,
+              role: "assistant",
+              content: response.aiMessage.content || "",
+              createdAt: response.aiMessage.createdAt || new Date().toISOString(),
+            };
+            messagesToAdd.push(aiMsg);
+            console.log("Added AI message:", aiMsg);
+          }
+          
+          if (messagesToAdd.length === 0) {
+            console.warn("No valid messages to add from response");
+            return prev;
+          }
+          
+          const updatedMessages = [...filtered, ...messagesToAdd];
+          console.log("Final messages state:", updatedMessages);
+          console.log("Message count:", updatedMessages.length);
+          
+          return updatedMessages;
+        });
       } catch (error) {
         console.error("Error sending message:", error);
         toast.error("Failed to send message");
-        // Remove the user message if it failed
+        // Remove the temp messages if it failed
         setMessages((prev) =>
-          prev.filter((msg) => !msg.id.startsWith("temp-user-"))
+          prev.filter(
+            (msg) => !msg.id.startsWith("temp-user-") && !msg.id.startsWith("typing-")
+          )
         );
       } finally {
         setLoading(false);
@@ -231,11 +299,28 @@ const ChatPageDetail = () => {
                         : "bg-muted text-foreground rounded-bl-none"
                     }`}
                   >
-                    <div className="text-sm">
-                      <Markdown remarkPlugins={[remarkGfm]}>
-                        {message.content}
-                      </Markdown>
-                    </div>
+                    {message.content === "..." ? (
+                      <div className="flex items-center space-x-1">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                          <div
+                            className="w-2 h-2 bg-current rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-current rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                        <span className="text-xs ml-2">Typing...</span>
+                      </div>
+                    ) : (
+                      <div className="text-sm">
+                        <Markdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </Markdown>
+                      </div>
+                    )}
                   </div>
 
                   {message.role === "user" && (

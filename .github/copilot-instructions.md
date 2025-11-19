@@ -206,7 +206,7 @@ npm run start  # Run production server
 **Environment Setup** (`.env.local`):
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
 ---

@@ -354,7 +354,7 @@ ai.post("/match", authMiddleware, async (c) => {
       success: true,
       data: {
         matches: matchingResult.matches || [],
-        suggestedUniversities: matchingResult.suggestedUniversities || [],
+        suggestedUniversities: insertedSuggestions.length > 0 ? insertedSuggestions : matchingResult.suggestedUniversities || [],
         insertedSuggestions: insertedSuggestions,
         totalMatches: matchingResult.matches?.length || 0,
       },

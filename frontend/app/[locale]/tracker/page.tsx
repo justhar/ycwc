@@ -1492,9 +1492,54 @@ export default function ApplicationTracker() {
 
                 <div>
                   <h4 className="font-medium mb-2">Priority</h4>
-                  <div className="flex gap-2">
-                    <PriorityBadge priority={selectedTask.priority} />
-                  </div>
+                  <Select
+                    value={selectedTask.priority}
+                    onValueChange={(value: TaskPriority) => {
+                      const updatedTask = { ...selectedTask, priority: value };
+                      setTasks(
+                        tasks.map((task) =>
+                          task.id === selectedTask.id ? updatedTask : task
+                        )
+                      );
+                      setSelectedTask(updatedTask);
+                      // Save immediately
+                      handleUpdateTask(selectedTask.id, { priority: value });
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue>
+                        <div className="flex items-center gap-2">
+                          <PriorityBadge priority={selectedTask.priority} />
+                        </div>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MUST">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400">
+                            MUST
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">Critical</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="NEED">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400">
+                            NEED
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">Important</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="NICE">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400">
+                            NICE
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">Optional</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>

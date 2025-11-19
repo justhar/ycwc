@@ -1,5 +1,27 @@
+import type {
+  ProfileData,
+  UserProfile,
+  Favorite,
+  UniversityMatch,
+  AIScholarship,
+  SuggestedUniversity,
+  MatchingResponse,
+  ScholarshipFavorite,
+  Task,
+  Subtask,
+  TaskGroup,
+  TaskRecommendation,
+  SuggestedTask,
+  Chat,
+  ChatMessage,
+  ChatResponse,
+  TaskPriority,
+  TaskType,
+  TaskStatus,
+} from "@/types";
+
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://ycwc-backend.vercel.app";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 // Helper function to get current locale
 const getCurrentLocale = (): string => {
@@ -24,69 +46,6 @@ const getHeaders = (token?: string) => {
 
   return headers;
 };
-
-// Types for profile data
-export interface ProfileData {
-  // Identity information
-  dateOfBirth?: string;
-  nationality?: string;
-
-  // Academic information
-  targetLevel?: string;
-  intendedMajor?: string;
-  institution?: string;
-  graduationYear?: number;
-  academicScore?: string;
-  scoreScale?: string;
-
-  // Study abroad preferences
-  intendedCountry?: string;
-  budgetMin?: number;
-  budgetMax?: number;
-
-  // JSON arrays
-  englishTests?: Array<{
-    id: string;
-    type: string;
-    customTestName?: string;
-    score: string;
-    date: string;
-  }>;
-
-  standardizedTests?: Array<{
-    id: string;
-    type: string;
-    customTestName?: string;
-    score: string;
-    date: string;
-  }>;
-
-  awards?: Array<{
-    id: string;
-    title: string;
-    year: string;
-    level: string;
-    description?: string;
-  }>;
-
-  extracurriculars?: Array<{
-    id: string;
-    activity: string;
-    period: string;
-    description?: string;
-    role?: string;
-  }>;
-}
-
-export interface UserProfile {
-  user: {
-    id: number;
-    fullName: string;
-    email: string;
-    createdAt: string;
-  };
-  profile: ProfileData | null;
-}
 
 // Get user profile with detailed information
 export const getUserProfile = async (token: string): Promise<UserProfile> => {
@@ -143,13 +102,6 @@ export const updateUserInfo = async (
   return response.json();
 };
 
-// Favorites API functions
-export interface Favorite {
-  id: string;
-  university: any; // University object
-  createdAt: string;
-}
-
 // Get user's favorite universities
 export const getUserFavorites = async (token: string): Promise<Favorite[]> => {
   const response = await fetch(`${API_BASE_URL}/user/favorites`, {
@@ -174,7 +126,7 @@ export const addToFavorites = async (
   universityData?: any
 ): Promise<{ message: string; favorite: any }> => {
   const response = await fetch(
-    `${API_BASE_URL}/user/favorites/${universityId}`,
+    `${API_BASE_URL}/user/favorites/universities/${universityId}`,
     {
       method: "POST",
       headers: {
@@ -199,7 +151,7 @@ export const removeFromFavorites = async (
   universityId: string
 ): Promise<{ message: string }> => {
   const response = await fetch(
-    `${API_BASE_URL}/user/favorites/${universityId}`,
+    `${API_BASE_URL}/user/favorites/universities/${universityId}`,
     {
       method: "DELETE",
       headers: {
@@ -223,7 +175,7 @@ export const checkFavoriteStatus = async (
   universityId: string
 ): Promise<{ isFavorite: boolean }> => {
   const response = await fetch(
-    `${API_BASE_URL}/user/favorites/check/${universityId}`,
+    `${API_BASE_URL}/user/favorites/universities/check/${universityId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -241,70 +193,6 @@ export const checkFavoriteStatus = async (
 };
 
 // AI Matching API functions
-export interface UniversityMatch {
-  university: any;
-  matchScore: number;
-  reasoning: string;
-  strengths: string[];
-  concerns: string[];
-}
-
-export interface AIScholarship {
-  name: string;
-  type: "fully-funded" | "partially-funded" | "tuition-only";
-  amount: string;
-  description: string;
-  requirements: string[];
-  deadline: string;
-  provider: string;
-  applicationUrl?: string;
-  eligiblePrograms: string[];
-  maxRecipients?: number;
-}
-
-export interface SuggestedUniversity {
-  name: string;
-  location: string;
-  country: string;
-  reasoning: string;
-  estimatedMatchScore: number;
-  specialties: string[];
-  type: string;
-  ranking?: number;
-  studentCount?: number;
-  establishedYear?: number;
-  tuitionRange?: string;
-  acceptanceRate?: string;
-  description?: string;
-  website?: string;
-  campusSize?: string;
-  // Additional detailed fields from AI
-  roomBoardCost?: string;
-  booksSuppliesCost?: string;
-  personalExpensesCost?: string;
-  facilitiesInfo?: {
-    library?: string;
-    recreationCenter?: string;
-    researchLabs?: string;
-    healthServices?: string;
-    [key: string]: string | undefined;
-  };
-  housingOptions?: string[];
-  studentOrganizations?: string[];
-  diningOptions?: string[];
-  transportationInfo?: string[];
-  scholarships?: AIScholarship[];
-}
-
-export interface MatchingResponse {
-  success: boolean;
-  data?: {
-    matches: UniversityMatch[];
-    suggestedUniversities: SuggestedUniversity[];
-    totalMatches: number;
-  };
-  error?: string;
-}
 
 // Get AI-powered university matches based on user profile
 export const getUserMatches = async (
@@ -329,31 +217,13 @@ export const getUserMatches = async (
   return data;
 };
 
-// Scholarship Favorites API functions
-export interface ScholarshipFavorite {
-  id: string;
-  name: string;
-  type: string;
-  amount: string;
-  description: string;
-  requirements: string;
-  deadline: string;
-  provider: string;
-  country: string;
-  applicationUrl: string;
-  eligiblePrograms: string[];
-  maxRecipients: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // Add scholarship to favorites
 export const addScholarshipToFavorites = async (
   token: string,
   scholarshipId: string
 ): Promise<{ message: string }> => {
   const response = await fetch(
-    `${API_BASE_URL}/user/scholarship-favorites/${scholarshipId}`,
+    `${API_BASE_URL}/user/favorites/scholarships/${scholarshipId}`,
     {
       method: "POST",
       headers: {
@@ -379,7 +249,7 @@ export const removeScholarshipFromFavorites = async (
   scholarshipId: string
 ): Promise<{ message: string }> => {
   const response = await fetch(
-    `${API_BASE_URL}/user/scholarship-favorites/${scholarshipId}`,
+    `${API_BASE_URL}/user/favorites/scholarships/${scholarshipId}`,
     {
       method: "DELETE",
       headers: {
@@ -403,7 +273,7 @@ export const removeScholarshipFromFavorites = async (
 export const getScholarshipFavorites = async (
   token: string
 ): Promise<ScholarshipFavorite[]> => {
-  const response = await fetch(`${API_BASE_URL}/user/scholarship-favorites`, {
+  const response = await fetch(`${API_BASE_URL}/user/favorites/scholarships`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -421,66 +291,6 @@ export const getScholarshipFavorites = async (
 // ============================================
 // TRACKER API FUNCTIONS
 // ============================================
-
-// Types for tracker
-export type TaskPriority = "MUST" | "NEED" | "NICE";
-export type TaskType = "GLOBAL" | "UNIV_SPECIFIC" | "GROUP";
-export type TaskStatus = "todo" | "in_progress" | "completed";
-
-export interface Task {
-  id: string;
-  title: string;
-  priority: TaskPriority;
-  dueDate?: string;
-  status: TaskStatus;
-  groupIds?: string[];
-  notes?: string;
-  subtasks?: Subtask[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface Subtask {
-  id: string;
-  taskId?: string;
-  title: string;
-  description?: string;
-  priority: "low" | "medium" | "high";
-  completed: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface TaskGroup {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  taskCount?: number;
-  tasks?: Task[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface TaskRecommendation {
-  recommendations: {
-    recommendations: Array<{
-      title: string;
-      type: TaskType;
-      priority: TaskPriority;
-      dueDate?: string;
-      notes?: string;
-      tags?: string[];
-    }>;
-  };
-  profile?: {
-    targetLevel?: string;
-    intendedMajor?: string;
-    institution?: string;
-  };
-  favoriteUniversities?: string[];
-  favoriteScholarships?: string[];
-}
 
 // TASK API FUNCTIONS
 export const getTasks = async (token: string): Promise<Task[]> => {
@@ -746,36 +556,6 @@ export const getTaskRecommendations = async (
 };
 
 // CHAT API FUNCTIONS
-export interface SuggestedTask {
-  id: string;
-  title: string;
-  type: "GLOBAL" | "UNIV_SPECIFIC" | "GROUP";
-  priority: "MUST" | "NEED" | "NICE";
-  appliesTo: string[];
-  dueDate?: string;
-  notes?: string;
-  tags?: string[];
-}
-
-export interface Chat {
-  id: string;
-  title: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  createdAt: string;
-}
-
-export interface ChatResponse {
-  userMessage: ChatMessage;
-  aiMessage: ChatMessage;
-  suggestedTasks?: SuggestedTask[];
-}
 
 // Get user's chats
 export const getUserChats = async (token: string): Promise<Chat[]> => {
@@ -804,6 +584,7 @@ export const createChat = async (token: string): Promise<Chat> => {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({}),
   });
 
   if (!response.ok) {
@@ -868,7 +649,10 @@ export const sendChatMessage = async (
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ 
+      content: message,
+      role: "user"
+    }),
   });
 
   if (!response.ok) {

@@ -92,6 +92,24 @@ export default function ChatPage() {
     return () => clearTimeout(timeoutId);
   }, [currentMessages, Object.keys(messageDisplayTexts).length]); // Only trigger on message count changes, not every character
 
+  // Auto-start typing animation for new AI messages
+  useEffect(() => {
+    if (currentMessages.length === 0) return;
+
+    const lastMessage = currentMessages[currentMessages.length - 1];
+    
+    // If the last message is an AI response (not typing indicator) and we're not already animating it
+    if (
+      lastMessage.role === "assistant" &&
+      lastMessage.content !== "..." &&
+      lastMessage.id !== animatingMessageId &&
+      !completedAnimations.has(lastMessage.id) &&
+      !animatingMessageId
+    ) {
+      setAnimatingMessageId(lastMessage.id);
+    }
+  }, [currentMessages, animatingMessageId, completedAnimations]);
+
   // Typewriter effect for AI messages (optimized)
   useEffect(() => {
     if (!animatingMessageId || loading) return;
@@ -307,10 +325,9 @@ export default function ChatPage() {
                             : "bg-muted"
                         }`}
                       >
-                        {loading &&
-                        message ===
-                          currentMessages[currentMessages.length - 1] &&
-                        message.role === "assistant" ? (
+                        {(loading ||
+                          (message.role === "assistant" &&
+                            message.content === "...")) ? (
                           <div className="flex items-center space-x-1">
                             <div className="flex space-x-1">
                               <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
@@ -324,7 +341,7 @@ export default function ChatPage() {
                               ></div>
                             </div>
                             <span className="text-sm text-muted-foreground ml-2">
-                              AI is thinking...
+                              AI is typing...
                             </span>
                           </div>
                         ) : (

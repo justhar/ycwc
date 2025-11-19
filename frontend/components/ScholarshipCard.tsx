@@ -85,97 +85,99 @@ export default function ScholarshipCard({
 
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-      <CardContent>
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex gap-2">
-            <div className="flex mr-2 items-center justify-center">
-              <Award className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2">
-                {scholarship.name}
-              </h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Building className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">
-                  {scholarship.provider}
-                </span>
+      <CardContent className="h-full justify-between flex flex-col">
+        <div>
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex gap-2">
+              <div className="flex mr-2 items-center justify-center">
+                <Award className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2">
+                  {scholarship.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Building className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    {scholarship.provider}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSaved(scholarship.id);
-            }}
-          >
-            <Heart
-              className={`w-4 h-4 ${
-                isSaved ? "fill-red-500 text-red-500" : "text-gray-400"
-              }`}
-            />
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2 mb-3">
-          <MapPin className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">{scholarship.country}</span>
-        </div>
-
-        <div className="space-y-3">
-          {/* Type and Amount */}
-          <Badge
-            variant="outline"
-            className={`${getTypeColor(
-              scholarship.type
-            )} flex items-center gap-1`}
-          >
-            {getTypeIcon(scholarship.type)}
-            {scholarship.type.replace("-", " ")}
-          </Badge>
-          <div className="flex items-center gap-1 text-green-600 font-semibold">
-            <DollarSign className="w-4 h-4" />
-            <span className="text-sm">{scholarship.amount}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSaved(scholarship.id);
+              }}
+            >
+              <Heart
+                className={`w-4 h-4 ${
+                  isSaved ? "fill-red-500 text-red-500" : "text-gray-400"
+                }`}
+              />
+            </Button>
           </div>
 
-          {/* Deadline */}
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              Deadline: {scholarship.deadline}
-            </span>
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">{scholarship.country}</span>
           </div>
 
-          {/* Max Recipients */}
-          {scholarship.maxRecipients && (
+          <div className="space-y-3">
+            {/* Type and Amount */}
+            <Badge
+              variant="outline"
+              className={`${getTypeColor(
+                scholarship.type
+              )} flex items-center gap-1`}
+            >
+              {getTypeIcon(scholarship.type)}
+              {scholarship.type.replace("-", " ")}
+            </Badge>
+            <div className="flex items-center gap-1 text-green-600 font-semibold">
+              <DollarSign className="w-4 h-4" />
+              <span className="text-sm">{scholarship.amount}</span>
+            </div>
+
+            {/* Deadline */}
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-gray-500" />
+              <Calendar className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-600">
-                Max Recipients: {scholarship.maxRecipients}
+                Deadline: {scholarship.deadline}
               </span>
             </div>
-          )}
 
-          {/* Eligible Programs Preview */}
-          {scholarship.eligiblePrograms.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {scholarship.eligiblePrograms
-                .slice(0, 3)
-                .map((program, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {program}
+            {/* Max Recipients */}
+            {scholarship.maxRecipients && (
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  Max Recipients: {scholarship.maxRecipients}
+                </span>
+              </div>
+            )}
+
+            {/* Eligible Programs Preview */}
+            {scholarship.eligiblePrograms.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {scholarship.eligiblePrograms
+                  .slice(0, 3)
+                  .map((program, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {program}
+                    </Badge>
+                  ))}
+                {scholarship.eligiblePrograms.length > 3 && (
+                  <Badge variant="secondary" className="text-xs">
+                    +{scholarship.eligiblePrograms.length - 3} more
                   </Badge>
-                ))}
-              {scholarship.eligiblePrograms.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{scholarship.eligiblePrograms.length - 3} more
-                </Badge>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}

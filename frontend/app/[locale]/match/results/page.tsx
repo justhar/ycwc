@@ -73,18 +73,11 @@ export default function MatchResultsPage() {
           const userFavorites = await getUserFavorites(token);
           setFavorites(userFavorites);
 
-          // Create favoriteIds set, converting AI-suggested universities back to their generated IDs
+          // Create favoriteIds set from actual database IDs
           const favoriteIdsSet = new Set<string>();
           userFavorites.forEach((fav: any) => {
-            if (fav.university.source === "ai_suggested") {
-              // Generate the AI-suggested ID based on the university name
-              const generatedId = `ai-suggested-${fav.university.name
-                .replace(/\s+/g, "-")
-                .toLowerCase()}`;
-              favoriteIdsSet.add(generatedId);
-            } else {
-              favoriteIdsSet.add(fav.university.id);
-            }
+            // Always use the actual university ID from the database
+            favoriteIdsSet.add(fav.university.id);
           });
 
           setFavoriteIds(favoriteIdsSet);
@@ -112,51 +105,73 @@ export default function MatchResultsPage() {
       return;
     }
 
+    const isCurrentlyFavorited = favoriteIds.has(universityId);
+
     try {
-      if (favoriteIds.has(universityId)) {
-        // Remove from favorites
-        await removeFromFavorites(token, universityId);
+      if (isCurrentlyFavorited) {
+        // Remove from favorites - update state optimistically
         setFavoriteIds((prev) => {
           const newSet = new Set(prev);
           newSet.delete(universityId);
           return newSet;
         });
 
-        // For AI-suggested universities, filter by name since the ID is generated
-        if (universityId.startsWith("ai-suggested-")) {
-          setFavorites((prev) =>
-            prev.filter((fav) => fav.university.name !== university?.name)
-          );
-        } else {
-          setFavorites((prev) =>
-            prev.filter((fav) => fav.university.id !== universityId)
-          );
+        // Remove from favorites list
+        setFavorites((prev) =>
+          prev.filter((fav) => fav.university.id !== universityId)
+        );
+
+        // Call backend to remove favorite
+        try {
+          await removeFromFavorites(token, universityId);
+        } catch (error) {
+          console.error("Failed to remove from favorites, reverting:", error);
+          // Revert optimistic update on error
+          setFavoriteIds((prev) => new Set([...prev, universityId]));
+          if (university) {
+            setFavorites((prev) => [...prev, { university }]);
+          }
         }
       } else {
-        // Add to favorites - pass university data for AI-suggested universities
-        const result = await addToFavorites(token, universityId, university);
+        // Add to favorites - update state optimistically
+        setFavoriteIds((prev) => new Set([...prev, universityId]));
 
-        // Reload favorites to update the IDs properly
-        const userFavorites = await getUserFavorites(token);
-        setFavorites(userFavorites);
-
-        // Create favoriteIds set, converting AI-suggested universities back to their generated IDs
-        const favoriteIdsSet = new Set<string>();
-        userFavorites.forEach((fav: any) => {
-          if (fav.university.source === "ai_suggested") {
-            // Generate the AI-suggested ID based on the university name
-            const generatedId = `ai-suggested-${fav.university.name
-              .replace(/\s+/g, "-")
-              .toLowerCase()}`;
-            favoriteIdsSet.add(generatedId);
-          } else {
+        // Call backend to add favorite
+        try {
+          await addToFavorites(token, universityId, university);
+          // On success, reload to ensure sync
+          const userFavorites = await getUserFavorites(token);
+          setFavorites(userFavorites);
+          
+          // Rebuild favoriteIds from backend response to ensure accuracy
+          const favoriteIdsSet = new Set<string>();
+          userFavorites.forEach((fav: any) => {
             favoriteIdsSet.add(fav.university.id);
-          }
-        });
-        setFavoriteIds(favoriteIdsSet);
+          });
+          setFavoriteIds(favoriteIdsSet);
+        } catch (error) {
+          console.error("Failed to add to favorites, reverting:", error);
+          // Revert optimistic update on error
+          setFavoriteIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(universityId);
+            return newSet;
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
+      // Reload favorites to revert to correct state on any error
+      try {
+        const userFavorites = await getUserFavorites(token);
+        const favoriteIdsSet = new Set<string>();
+        userFavorites.forEach((fav: any) => {
+          favoriteIdsSet.add(fav.university.id);
+        });
+        setFavoriteIds(favoriteIdsSet);
+      } catch (reloadError) {
+        console.error("Failed to reload favorites after error:", reloadError);
+      }
     }
   };
 
@@ -329,8 +344,9 @@ export default function MatchResultsPage() {
               <div className="grid gap-6">
                 {suggestedUniversities.map((uni, index) => {
                   // Convert SuggestedUniversity to University format for UnivCard
+                  // Use actual database ID if available (for inserted universities)
                   const universityForCard = {
-                    id: `ai-suggested-${uni.name
+                    id: uni.id || `ai-suggested-${uni.name
                       .replace(/\s+/g, "-")
                       .toLowerCase()}`,
                     name: uni.name,
@@ -344,7 +360,7 @@ export default function MatchResultsPage() {
                     acceptanceRate: uni.acceptanceRate || "Not specified",
                     description: uni.description || uni.reasoning,
                     website: uni.website || "",
-                    source: "AI Generated",
+                    source: uni.source || "ai_suggested",
                     imageUrl: undefined,
                     specialties: uni.specialties,
                     campusSize: uni.campusSize,

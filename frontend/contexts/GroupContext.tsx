@@ -12,8 +12,8 @@ import {
   updateTaskGroup,
   deleteTaskGroup,
   getTaskGroups,
-  TaskGroup,
 } from "@/lib/api";
+import type { TaskGroup, GroupContextType } from "@/types";
 
 export interface Group {
   id: string;
@@ -21,22 +21,6 @@ export interface Group {
   description?: string;
   color: string;
   taskIds?: string[];
-}
-
-interface GroupContextType {
-  groups: Group[];
-  loadGroups: (token: string) => Promise<void>;
-  createGroup: (
-    groupData: Omit<Group, "id" | "taskIds">,
-    token: string
-  ) => Promise<void>;
-  updateGroup: (
-    groupId: string,
-    updates: Partial<Group>,
-    token: string
-  ) => Promise<void>;
-  deleteGroup: (groupId: string, token: string) => Promise<void>;
-  loading: boolean;
 }
 
 const GroupContext = createContext<GroupContextType | undefined>(undefined);

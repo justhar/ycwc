@@ -6,65 +6,12 @@ import {
   universityScholarships,
 } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
-
-export interface ProfileData {
-  fullName?: string;
-  dateOfBirth?: string;
-  nationality?: string;
-  email?: string;
-  phone?: string;
-  targetLevel?: "undergraduate" | "graduate" | "postgraduate";
-  intendedMajor?: string;
-  institution?: string;
-  graduationYear?: number;
-  academicScore?: string;
-  scoreScale?: "gpa4" | "gpa5" | "percentage" | "other";
-  englishTests?: Array<{
-    type: string;
-    score: string;
-    date: string;
-  }>;
-  standardizedTests?: Array<{
-    type: string;
-    score: string;
-    date: string;
-  }>;
-  awards?: Array<{
-    title: string;
-    year: string;
-    level: string;
-  }>;
-  extracurriculars?: Array<{
-    activity: string;
-    period: string;
-    description?: string;
-  }>;
-  intendedCountry?: string;
-  budgetMin?: number;
-  budgetMax?: number;
-}
-
-export interface AIAnalysisResult {
-  success: boolean;
-  data?: ProfileData;
-  error?: string;
-  confidence?: number;
-}
-
-export interface UniversityMatch {
-  university: any;
-  matchScore: number;
-  reasoning: string;
-  strengths: string[];
-  concerns: string[];
-}
-
-export interface MatchingResult {
-  success: boolean;
-  matches?: UniversityMatch[];
-  suggestedUniversities?: any[];
-  error?: string;
-}
+import type {
+  ProfileData,
+  AIAnalysisResult,
+  UniversityMatch,
+  MatchingResult,
+} from "../types/index.js";
 
 class AIService {
   private genai: GoogleGenAI;
@@ -84,7 +31,7 @@ class AIService {
       const prompt = this.createProfileExtractionPrompt(cvText);
 
       const response = await this.genai.models.generateContent({
-        model: "gemini-2.0-flash-001",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
           temperature: 0.1,
@@ -120,7 +67,7 @@ class AIService {
 
       // Use the file inline in the content request
       const response = await this.genai.models.generateContent({
-        model: "gemini-2.0-flash-001",
+        model: "gemini-flash-latest",
         contents: [
           {
             role: "user",
@@ -485,7 +432,7 @@ RESPONSE FORMAT (JSON only):
       console.log("📤 Sending match prompt to Gemini AI...");
 
       const matchResult = await this.genai.models.generateContent({
-        model: "gemini-2.0-flash-001",
+        model: "gemini-flash-latest",
         contents: matchPrompt,
         config: {
           temperature: 0.0,
@@ -497,7 +444,7 @@ RESPONSE FORMAT (JSON only):
       console.log("📥 Received match response");
 
       // Parse match response
-      let parsedMatches;
+      let parsedMatches: any = { matches: [] };
       try {
         console.log("Raw match response length:", matchResponseText.length);
         let cleanedResponse = matchResponseText
@@ -514,22 +461,23 @@ RESPONSE FORMAT (JSON only):
           );
         }
 
+        // More aggressive JSON cleaning
         cleanedResponse = cleanedResponse
-          .replace(/,(\s*[}\]])/g, "$1")
-          .replace(/:\s*:/g, ":")
-          .replace(/([{,]\s*)(\w+):/g, '$1"$2":')
-          .replace(/"null"/g, "null")
-          .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1")
-          .replace(/:\s*"(true|false)"/g, ":$1")
-          .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"');
+          .replace(/,(\s*[}\]])/g, "$1") // Remove trailing commas
+          .replace(/:\s*:/g, ":") // Fix double colons
+          .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Quote unquoted keys
+          .replace(/"null"/g, "null") // Fix quoted nulls
+          .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1") // Unquote numbers
+          .replace(/:\s*"(true|false)"/g, ":$1") // Unquote booleans
+          .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"') // Fix dates
+          .replace(/,\s*,/g, ",") // Remove double commas
+          .replace(/\[\s*,/g, "[") // Remove leading commas in arrays
+          .replace(/,\s*\]/g, "]"); // Remove trailing commas in arrays
 
         parsedMatches = JSON.parse(cleanedResponse);
       } catch (parseError) {
-        console.error("Failed to parse match response:", parseError);
-        return {
-          success: false,
-          error: "Failed to parse AI match response",
-        };
+        console.error("Failed to parse match response, returning empty matches:", parseError);
+        parsedMatches = { matches: [] };
       }
 
       // Process matches
@@ -605,7 +553,7 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
 }`;
 
         const suggestResult = await this.genai.models.generateContent({
-          model: "gemini-2.0-flash-001",
+          model: "gemini-flash-latest",
           contents: suggestPrompt,
           config: {
             temperature: 0.7,
@@ -640,7 +588,10 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
             .replace(/:\s*"(true|false)"/g, ":$1")
             .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"');
 
+          console.log("Attempting to parse suggestions JSON...");
           const parsedSuggest = JSON.parse(cleanedSuggest);
+          console.log("✅ Successfully parsed suggestions:", parsedSuggest.suggestions?.length || 0, "universities");
+          
           suggestedUniversities = (parsedSuggest.suggestions || []).map(
             (uni: any) => ({
               ...uni,
@@ -669,13 +620,14 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
           console.error(
             "Failed to parse suggestions:",
             suggestError,
-            suggestResponseText
+            "Raw response length:",
+            suggestResponseText.length
           );
           // Continue with empty suggestions
           suggestedUniversities = [];
         }
-      } catch (suggestError) {
-        console.error("Suggestion generation error:", suggestError);
+      } catch (error) {
+        console.error("Suggestion generation error:", error);
         // Continue with empty suggestions - not a critical failure
         suggestedUniversities = [];
       }
@@ -950,7 +902,7 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
       );
 
       const response = await this.genai.models.generateContent({
-        model: "gemini-2.0-flash-001",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
           temperature: 0.3,
@@ -1124,7 +1076,7 @@ Generate 1-5 tasks focused on the student's specific favorite universities and s
       );
 
       const response = await this.genai.models.generateContent({
-        model: "gemini-2.0-flash-001",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
           temperature: 0.7,

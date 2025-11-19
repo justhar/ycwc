@@ -11,27 +11,13 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useAuth } from "../app/contexts/AuthContext";
 import {
-  Chat,
-  ChatMessage,
   getUserChats,
   createChat,
   deleteChat,
   getChatMessages,
   sendChatMessage,
-  ChatResponse,
 } from "@/lib/api";
-
-interface ChatContextType {
-  chats: Chat[];
-  currentChatId: string | null;
-  currentMessages: ChatMessage[];
-  loading: boolean;
-  loadChats: () => Promise<void>;
-  createNewChat: () => Promise<string>;
-  selectChat: (chatId: string) => Promise<void>;
-  deleteChatById: (chatId: string) => Promise<void>;
-  sendMessage: (message: string) => Promise<ChatResponse | undefined>;
-}
+import type { Chat, ChatMessage, ChatResponse, ChatContextType } from "@/types";
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -134,6 +120,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       } else {
         setCurrentChatId(null);
         setCurrentMessages([]);
+        // Redirect to /chat when no chats remain
+        router.push(`/${locale}/chat`);
       }
     }
   };
@@ -141,22 +129,42 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const sendMessage = async (message: string) => {
     if (!token || !currentChatId) return;
 
-    // Optimistically add user message
+    // Optimistically add user message with chatId
     const tempUserMessage: ChatMessage = {
       id: `temp-${Date.now()}`,
+      chatId: currentChatId,
       role: "user",
       content: message,
       createdAt: new Date().toISOString(),
     };
-    setCurrentMessages((prev) => [...prev, tempUserMessage]);
+    
+    // Add typing indicator (temporary AI message showing it's thinking)
+    const typingMessage: ChatMessage = {
+      id: `typing-${Date.now()}`,
+      chatId: currentChatId,
+      role: "assistant",
+      content: "...",
+      createdAt: new Date().toISOString(),
+    };
+
+    setCurrentMessages((prev) => [...prev, tempUserMessage, typingMessage]);
 
     try {
       const response = await sendChatMessage(token, currentChatId, message);
 
-      // Replace temp message with real one and add AI response
+      // Replace temp messages with real ones
       setCurrentMessages((prev) => {
-        const filtered = prev.filter((msg) => msg.id !== tempUserMessage.id);
-        return [...filtered, response.userMessage, response.aiMessage];
+        const filtered = prev.filter(
+          (msg) => msg.id !== tempUserMessage.id && msg.id !== typingMessage.id
+        );
+        const messagesToAdd = [response.userMessage];
+        
+        // Add AI message if it exists (AI response generated)
+        if (response.aiMessage) {
+          messagesToAdd.push(response.aiMessage);
+        }
+        
+        return [...filtered, ...messagesToAdd];
       });
 
       // Update chat title if it was just created
@@ -178,9 +186,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       return response;
     } catch (error) {
-      // Remove temp message on error
+      // Remove temp messages on error
       setCurrentMessages((prev) =>
-        prev.filter((msg) => msg.id !== tempUserMessage.id)
+        prev.filter(
+          (msg) => msg.id !== tempUserMessage.id && msg.id !== typingMessage.id
+        )
       );
       throw error;
     }

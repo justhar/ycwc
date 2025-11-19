@@ -37,8 +37,7 @@ import {
   getScholarshipFavorites,
 } from "@/lib/api";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 interface University {
   id: string;
@@ -115,6 +114,22 @@ export default function UnivCard({
     []
   );
 
+  // Load user's scholarship favorites on mount
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!userToken) return;
+
+      try {
+        const favorites = await getScholarshipFavorites(userToken);
+        setScholarshipFavorites(favorites.map((fav) => fav.scholarshipId));
+      } catch (error) {
+        console.error("Error loading scholarship favorites:", error);
+      }
+    };
+
+    loadFavorites();
+  }, [userToken]);
+
   // Fetch scholarships for this university
   useEffect(() => {
     const fetchScholarships = async () => {
@@ -161,91 +176,94 @@ export default function UnivCard({
 
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-      <CardContent>
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex gap-2">
-            <div className=" flex mr-2 items-center justify-center">
-              <University className="w-6 h-6" />
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2">
-              {/* <Badge variant="secondary" className="text-xs w-12 h-12">
-                #{university.ranking}
-              </Badge> */}
-              <h3 className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2">
-                {university.name}
-              </h3>
-              {university.source === "AI Generated" && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs flex items-center gap-1"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  AI
-                </Badge>
-              )}
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSaved(university.id);
-            }}
-          >
-            <Star
-              className={`w-5 h-5 transition-colors ${
-                savedItems.includes(university.id)
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-400 hover:text-yellow-400"
-              }`}
-            />
-          </Button>
-        </div>
-
+      <CardContent className="h-full">
         <Dialog>
           <DialogTrigger asChild>
-            <div onClick={() => onSelectUniversity?.(university)}>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                <MapPin className="w-4 h-4" />
-                {university.location}
-              </div>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Students:</span>
-                  <span>{university.studentCount.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Acceptance Rate:
-                  </span>
-                  <span>{university.acceptanceRate}%</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Type:</span>
-                  <Badge variant="outline" className="text-xs">
-                    {university.type}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-1 mb-4">
-                {university.specialties.slice(0, 3).map((specialty) => (
-                  <Badge
-                    key={specialty}
-                    variant="secondary"
-                    className="text-xs"
+            <div className="h-full justify-between flex flex-col">
+              <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex gap-2">
+                    <div className=" flex mr-2 items-center justify-center">
+                      <University className="w-6 h-6" />
+                    </div>
+                    <div className="flex flex-row items-center justify-center gap-2">
+                      {/* <Badge variant="secondary" className="text-xs w-12 h-12">
+                #{university.ranking}
+              </Badge> */}
+                      <h3 className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2">
+                        {university.name}
+                      </h3>
+                      {university.source === "AI Generated" && (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs flex items-center gap-1"
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          AI
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSaved(university.id);
+                    }}
                   >
-                    {specialty}
-                  </Badge>
-                ))}
-                {university.specialties.length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{university.specialties.length - 3} more
-                  </Badge>
-                )}
+                    <Star
+                      className={`w-5 h-5 transition-colors ${
+                        savedItems.includes(university.id)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-400 hover:text-yellow-400"
+                      }`}
+                    />
+                  </Button>
+                </div>
+                <div onClick={() => onSelectUniversity?.(university)}>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                    <MapPin className="w-4 h-4" />
+                    {university.location}
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Students:</span>
+                      <span>{university.studentCount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Acceptance Rate:
+                      </span>
+                      <span>{university.acceptanceRate}%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Type:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {university.type}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {university.specialties.slice(0, 3).map((specialty) => (
+                      <Badge
+                        key={specialty}
+                        variant="secondary"
+                        className="text-xs"
+                      >
+                        {specialty}
+                      </Badge>
+                    ))}
+                    {university.specialties.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{university.specialties.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-between">
