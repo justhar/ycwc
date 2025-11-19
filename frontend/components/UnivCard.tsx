@@ -35,9 +35,8 @@ import {
   addScholarshipToFavorites,
   removeScholarshipFromFavorites,
   getScholarshipFavorites,
+  API_BASE_URL,
 } from "@/lib/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 interface University {
   id: string;

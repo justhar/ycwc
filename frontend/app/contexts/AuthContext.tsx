@@ -11,13 +11,11 @@ import {
   getUserProfile,
   updateUserProfile,
   updateUserInfo,
+  API_BASE_URL,
 } from "@/lib/api";
 import type { User, AuthContextType, ProfileData } from "@/types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

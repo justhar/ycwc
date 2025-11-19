@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/shadcn-io/dropzone";
 import { Cloud, Sparkles, WandSparkles, X } from "lucide-react";
 import { toast } from "sonner";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { API_BASE_URL } from "@/lib/api";
 
 interface CVUploadSectionProps {
   showAISection: boolean;

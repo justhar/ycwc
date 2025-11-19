@@ -51,6 +51,7 @@ import {
   removeScholarshipFromFavorites,
   getScholarshipFavorites,
   ScholarshipFavorite,
+  API_BASE_URL,
 } from "@/lib/api";
 import UnivCard from "@/components/UnivCard";
 import {
@@ -150,9 +151,6 @@ interface ScholarshipSearchReturn {
 }
 
 // API client functions
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
 const fetchUniversities = async (params?: {
   search?: string;
   country?: string;

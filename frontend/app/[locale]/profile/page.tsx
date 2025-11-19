@@ -9,6 +9,7 @@ import {
   removeFromFavorites,
   getScholarshipFavorites,
   removeScholarshipFromFavorites,
+  API_BASE_URL,
 } from "@/lib/api";
 import type { Favorite, ScholarshipFavorite } from "@/types";
 import { useTranslations } from "next-intl";
@@ -24,8 +25,6 @@ import {
   ExtracurricularsSection,
   FavoritesPanel,
 } from "@/components/profile";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
