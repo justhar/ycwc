@@ -39,7 +39,17 @@ class AIService {
         },
       });
 
-      const result = response.text || "";
+      // Extract text from response, handling multiple parts
+      let result = "";
+      if (response.candidates?.[0]?.content?.parts) {
+        result = response.candidates[0].content.parts
+          .filter((part: any) => part.text)
+          .map((part: any) => part.text)
+          .join("\n");
+      } else if (response.text) {
+        result = response.text;
+      }
+
       const parsedData = this.parseAIResponse(result);
 
       return {
@@ -406,9 +416,14 @@ ${
 AVAILABLE UNIVERSITIES:
 ${JSON.stringify(universitiesForAI, null, 2)}
 
+CRITICAL INSTRUCTIONS:
+1. EXCLUDE any universities from ${userProfile.nationality || "the student's origin country"}. Only suggest universities outside the student's origin country.
+2. Only include universities that match the student's intended major and academic profile.
+3. Prioritize universities in or near the intended study abroad country (${userProfile.intendedCountry || "any country"}).
+
 TASK:
-1. Analyze each existing university and calculate a match score (0-100) based on academic fit, program alignment, cultural/geographic fit, financial fit, and admission probability.
-2. For each university, provide: match score, detailed reasoning, 2-3 key strengths, and 1-2 potential concerns.
+1. Analyze each available university and calculate a match score (0-100) based on academic fit, program alignment, cultural/geographic fit, financial fit, and admission probability.
+2. For each matching university (excluding origin country), provide: match score, detailed reasoning, 2-3 key strengths, and 1-2 potential concerns.
 3. Rank all matches by score (highest first).
 
 CRITICAL: Respond ONLY with valid JSON. No text before or after. No markdown. Start with { and end with }.
@@ -436,17 +451,28 @@ RESPONSE FORMAT (JSON only):
         contents: matchPrompt,
         config: {
           temperature: 0.0,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 8192,
         },
       });
-      const matchResponseText = matchResult.text || "";
+
+      // Extract text from response, handling multiple parts
+      let matchResponseText = "";
+      if (matchResult.candidates?.[0]?.content?.parts) {
+        matchResponseText = matchResult.candidates[0].content.parts
+          .filter((part: any) => part.text)
+          .map((part: any) => part.text)
+          .join("\n");
+      } else if (matchResult.text) {
+        matchResponseText = matchResult.text;
+      }
 
       console.log("📥 Received match response");
+      console.log(matchResponseText);
+      console.log("Raw match response length:", matchResponseText.length);
 
       // Parse match response
       let parsedMatches: any = { matches: [] };
       try {
-        console.log("Raw match response length:", matchResponseText.length);
         let cleanedResponse = matchResponseText
           .replace(/```json\n?|\n?```/g, "")
           .replace(/```\n?|\n?```/g, "")
@@ -461,6 +487,14 @@ RESPONSE FORMAT (JSON only):
           );
         }
 
+        // Replace literal newlines and carriage returns within the JSON string
+        // This is critical to prevent breaking JSON structure
+        cleanedResponse = cleanedResponse
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .join("");
+
         // More aggressive JSON cleaning
         cleanedResponse = cleanedResponse
           .replace(/,(\s*[}\]])/g, "$1") // Remove trailing commas
@@ -474,9 +508,29 @@ RESPONSE FORMAT (JSON only):
           .replace(/\[\s*,/g, "[") // Remove leading commas in arrays
           .replace(/,\s*\]/g, "]"); // Remove trailing commas in arrays
 
+        // Escape unescaped quotes inside string values
+        // Find all quoted strings and escape internal quotes
+        cleanedResponse = cleanedResponse.replace(
+          /"([^"]*)"/g,
+          (match, content) => {
+            // Escape any unescaped quotes inside the string value
+            const escaped = content
+              .replace(/\\/g, "\\\\") // Escape backslashes first
+              .replace(/"/g, '\\"'); // Then escape quotes
+            return `"${escaped}"`;
+          }
+        );
+
         parsedMatches = JSON.parse(cleanedResponse);
       } catch (parseError) {
-        console.error("Failed to parse match response, returning empty matches:", parseError);
+        console.error(
+          "Failed to parse match response, returning empty matches:",
+          parseError
+        );
+        console.error(
+          "Cleaned response sample:",
+          matchResponseText.substring(0, 500)
+        );
         parsedMatches = { matches: [] };
       }
 
@@ -561,7 +615,17 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
           },
         });
 
-        const suggestResponseText = suggestResult.text || "";
+        // Extract text from response, handling multiple parts
+        let suggestResponseText = "";
+        if (suggestResult.candidates?.[0]?.content?.parts) {
+          suggestResponseText = suggestResult.candidates[0].content.parts
+            .filter((part: any) => part.text)
+            .map((part: any) => part.text)
+            .join("\n");
+        } else if (suggestResult.text) {
+          suggestResponseText = suggestResult.text;
+        }
+
         console.log("📥 Received suggestions response");
 
         try {
@@ -586,12 +650,17 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
             .replace(/"null"/g, "null")
             .replace(/:\s*"(\d+(?:\.\d+)?)"/g, ":$1")
             .replace(/:\s*"(true|false)"/g, ":$1")
-            .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"');
+            .replace(/:\s*"(\d{4}-\d{2}-\d{2})"/g, ':"$1"')
+            .replace(/[\n\r]/g, " "); // Replace newlines with spaces
 
           console.log("Attempting to parse suggestions JSON...");
           const parsedSuggest = JSON.parse(cleanedSuggest);
-          console.log("✅ Successfully parsed suggestions:", parsedSuggest.suggestions?.length || 0, "universities");
-          
+          console.log(
+            "✅ Successfully parsed suggestions:",
+            parsedSuggest.suggestions?.length || 0,
+            "universities"
+          );
+
           suggestedUniversities = (parsedSuggest.suggestions || []).map(
             (uni: any) => ({
               ...uni,
@@ -910,7 +979,17 @@ RESPOND ONLY with JSON (no markdown, no text before/after):
         },
       });
 
-      const aiResponseText = response.text || "";
+      // Extract text from response, handling multiple parts
+      let aiResponseText = "";
+      if (response.candidates?.[0]?.content?.parts) {
+        aiResponseText = response.candidates[0].content.parts
+          .filter((part: any) => part.text)
+          .map((part: any) => part.text)
+          .join("\n");
+      } else if (response.text) {
+        aiResponseText = response.text;
+      }
+
       console.log("📝 AI Response received for task recommendations");
 
       const recommendations = this.parseTaskRecommendations(aiResponseText);
@@ -1084,7 +1163,16 @@ Generate 1-5 tasks focused on the student's specific favorite universities and s
         },
       });
 
-      const aiResponseText = response.text || "";
+      // Extract text from response, handling multiple parts
+      let aiResponseText = "";
+      if (response.candidates?.[0]?.content?.parts) {
+        aiResponseText = response.candidates[0].content.parts
+          .filter((part: any) => part.text)
+          .map((part: any) => part.text)
+          .join("\n");
+      } else if (response.text) {
+        aiResponseText = response.text;
+      }
       console.log("📝 AI chat response received");
 
       // Parse the response to extract text and suggested tasks

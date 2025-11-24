@@ -30,18 +30,8 @@ app.use(
   })
 );
 
-const welcomeStrings = [
-  "Hello Hono!",
-  "Authentication API is ready!",
-  "Available endpoints:",
-  "- POST /auth/register",
-  "- POST /auth/login",
-  "- POST /auth/logout",
-  "- GET /user/profile (protected)",
-];
-
 app.get("/", (c) => {
-  return c.json({ message: welcomeStrings.join("\n") });
+  return c.json({ message: "Welcome to the YCWC Backend API" });
 });
 
 // Mount authentication routes
