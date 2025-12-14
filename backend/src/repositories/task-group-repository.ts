@@ -35,11 +35,14 @@ export class TaskGroupRepository {
   /**
    * Create new task group
    */
-  async create(userId: number, groupData: {
-    name: string;
-    color?: string;
-    description?: string;
-  }) {
+  async create(
+    userId: number,
+    groupData: {
+      name: string;
+      color?: string;
+      description?: string;
+    }
+  ) {
     const result = await db
       .insert(taskGroups)
       .values({
@@ -58,8 +61,16 @@ export class TaskGroupRepository {
    */
   async update(groupId: string, userId: number, updates: Partial<TaskGroup>) {
     // Remove read-only fields
-    const { id, userId: _, createdAt, updatedAt, taskCount, displayOrder, ...updateData } = updates as any;
-    
+    const {
+      id,
+      userId: _,
+      createdAt,
+      updatedAt,
+      taskCount,
+      displayOrder,
+      ...updateData
+    } = updates as any;
+
     const result = await db
       .update(taskGroups)
       .set(updateData)

@@ -71,7 +71,8 @@ export class ChatController {
     } catch (error) {
       return c.json(
         {
-          error: error instanceof Error ? error.message : "Failed to create chat",
+          error:
+            error instanceof Error ? error.message : "Failed to create chat",
         },
         400
       );

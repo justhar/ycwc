@@ -4,7 +4,14 @@
  */
 
 import { db } from "../db/db.js";
-import { profiles, userFavorites, universities, userScholarshipFavorites, scholarships, users } from "../db/schema.js";
+import {
+  profiles,
+  userFavorites,
+  universities,
+  userScholarshipFavorites,
+  scholarships,
+  users,
+} from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import type { ProfileData } from "../types/index.js";
 
@@ -130,7 +137,10 @@ export class ProfileRepository {
         scholarship: scholarships,
       })
       .from(userScholarshipFavorites)
-      .leftJoin(scholarships, eq(userScholarshipFavorites.scholarshipId, scholarships.id))
+      .leftJoin(
+        scholarships,
+        eq(userScholarshipFavorites.scholarshipId, scholarships.id)
+      )
       .where(eq(userScholarshipFavorites.userId, userId));
 
     return result;
@@ -197,7 +207,10 @@ export class ProfileRepository {
   /**
    * Check if university is favorited by user
    */
-  async checkFavoriteUniversity(userId: number, universityId: string): Promise<boolean> {
+  async checkFavoriteUniversity(
+    userId: number,
+    universityId: string
+  ): Promise<boolean> {
     const result = await db
       .select()
       .from(userFavorites)
@@ -214,7 +227,10 @@ export class ProfileRepository {
   /**
    * Check if scholarship is favorited by user
    */
-  async checkFavoriteScholarship(userId: number, scholarshipId: string): Promise<boolean> {
+  async checkFavoriteScholarship(
+    userId: number,
+    scholarshipId: string
+  ): Promise<boolean> {
     const result = await db
       .select()
       .from(userScholarshipFavorites)
@@ -231,9 +247,12 @@ export class ProfileRepository {
   /**
    * Update user basic information (fullName, email)
    */
-  async updateUserInfo(userId: number, data: { fullName?: string; email?: string }) {
+  async updateUserInfo(
+    userId: number,
+    data: { fullName?: string; email?: string }
+  ) {
     const updateData: any = {};
-    
+
     if (data.fullName) {
       updateData.fullName = data.fullName;
     }

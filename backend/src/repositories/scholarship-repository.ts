@@ -24,7 +24,9 @@ export class ScholarshipRepository {
 
     if (params?.country) {
       query = query.where(eq(scholarships.country, params.country)) as any;
-      countQuery = countQuery.where(eq(scholarships.country, params.country)) as any;
+      countQuery = countQuery.where(
+        eq(scholarships.country, params.country)
+      ) as any;
     }
 
     // Get total count before pagination
@@ -107,8 +109,9 @@ export class ScholarshipRepository {
    */
   async update(scholarshipId: string, updates: Partial<Scholarship>) {
     // Remove read-only fields
-    const { id, createdAt, updatedAt, universityId, ...updateData } = updates as any;
-    
+    const { id, createdAt, updatedAt, universityId, ...updateData } =
+      updates as any;
+
     const result = await db
       .update(scholarships)
       .set(updateData)

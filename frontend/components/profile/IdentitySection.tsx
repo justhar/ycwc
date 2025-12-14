@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { SelectContent, SelectItem } from "@/components/ui/select";
 import { SquarePen } from "lucide-react";
 import { ControlledInput, ControlledSelect } from "./index";
 
@@ -90,11 +87,7 @@ export function IdentitySection({
                 </ControlledSelect>
               </div>
             </div>
-            <Button
-              className="mt-4"
-              onClick={onSave}
-              disabled={profileLoading}
-            >
+            <Button className="mt-4" onClick={onSave} disabled={profileLoading}>
               {profileLoading ? t("saving") : t("saveChanges")}
             </Button>
           </DialogContent>

@@ -22,7 +22,9 @@ class UniversityService {
 
     if (params?.minRanking && params?.maxRanking) {
       if (params.minRanking > params.maxRanking) {
-        throw new Error("Minimum ranking cannot be greater than maximum ranking");
+        throw new Error(
+          "Minimum ranking cannot be greater than maximum ranking"
+        );
       }
     }
 
@@ -41,7 +43,9 @@ class UniversityService {
 
     if (filters.minRanking && filters.maxRanking) {
       if (filters.minRanking > filters.maxRanking) {
-        throw new Error("Minimum ranking cannot be greater than maximum ranking");
+        throw new Error(
+          "Minimum ranking cannot be greater than maximum ranking"
+        );
       }
     }
 
@@ -78,7 +82,7 @@ class UniversityService {
    */
   async getUniversityById(universityId: string) {
     const university = await universityRepository.findById(universityId);
-    
+
     if (!university) {
       throw new Error("University not found");
     }
@@ -93,7 +97,9 @@ class UniversityService {
     // Verify university exists
     await this.getUniversityById(universityId);
 
-    return await universityRepository.findScholarshipsByUniversityId(universityId);
+    return await universityRepository.findScholarshipsByUniversityId(
+      universityId
+    );
   }
 
   /**

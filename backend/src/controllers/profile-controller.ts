@@ -23,7 +23,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -50,7 +52,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         400
       );
@@ -75,7 +79,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -102,7 +108,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         400
       );
@@ -124,7 +132,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -146,7 +156,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -163,7 +175,10 @@ export class ProfileController {
       const { universityId } = c.req.param();
       const lang = getLanguageFromHeader(c);
 
-      const favorite = await profileService.addFavoriteUniversity(userId, universityId);
+      const favorite = await profileService.addFavoriteUniversity(
+        userId,
+        universityId
+      );
 
       return c.json({
         message: getLocalizedMessage("addedToFavorites", "success", lang),
@@ -173,7 +188,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         400
       );
@@ -190,7 +207,10 @@ export class ProfileController {
       const { scholarshipId } = c.req.param();
       const lang = getLanguageFromHeader(c);
 
-      const favorite = await profileService.addFavoriteScholarship(userId, scholarshipId);
+      const favorite = await profileService.addFavoriteScholarship(
+        userId,
+        scholarshipId
+      );
 
       return c.json({
         message: getLocalizedMessage("addedToFavorites", "success", lang),
@@ -200,7 +220,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         400
       );
@@ -226,7 +248,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -252,7 +276,9 @@ export class ProfileController {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -268,14 +294,19 @@ export class ProfileController {
       const userId = c.get("userId");
       const { universityId } = c.req.param();
 
-      const isFavorite = await profileService.checkFavoriteUniversity(userId, universityId);
+      const isFavorite = await profileService.checkFavoriteUniversity(
+        userId,
+        universityId
+      );
 
       return c.json({ isFavorite });
     } catch (error: any) {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );
@@ -291,14 +322,19 @@ export class ProfileController {
       const userId = c.get("userId");
       const { scholarshipId } = c.req.param();
 
-      const isFavorite = await profileService.checkFavoriteScholarship(userId, scholarshipId);
+      const isFavorite = await profileService.checkFavoriteScholarship(
+        userId,
+        scholarshipId
+      );
 
       return c.json({ isFavorite });
     } catch (error: any) {
       const lang = getLanguageFromHeader(c);
       return c.json(
         {
-          error: error.message || getLocalizedMessage("internalServerError", "errors", lang),
+          error:
+            error.message ||
+            getLocalizedMessage("internalServerError", "errors", lang),
         },
         500
       );

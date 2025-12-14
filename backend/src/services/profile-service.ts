@@ -13,7 +13,7 @@ class ProfileService {
   async getProfileWithUser(userId: number) {
     const user = await userRepository.findById(userId);
     const profile = await profileRepository.findByUserId(userId);
-    
+
     return {
       user,
       profile: profile || this.getDefaultProfile(),
@@ -25,7 +25,7 @@ class ProfileService {
    */
   async getProfile(userId: number) {
     const profile = await profileRepository.findByUserId(userId);
-    
+
     if (!profile) {
       // Return default empty profile if not found
       return this.getDefaultProfile();
@@ -88,9 +88,10 @@ class ProfileService {
 
     // Validate graduation year
     if (data.graduationYear !== undefined) {
-      const year = typeof data.graduationYear === 'string' 
-        ? parseInt(data.graduationYear) 
-        : data.graduationYear;
+      const year =
+        typeof data.graduationYear === "string"
+          ? parseInt(data.graduationYear)
+          : data.graduationYear;
       const currentYear = new Date().getFullYear();
       if (isNaN(year) || year < 1950 || year > currentYear + 10) {
         throw new Error("Invalid graduation year");
@@ -154,7 +155,10 @@ class ProfileService {
    */
   async addFavoriteUniversity(userId: number, universityId: string) {
     // Check if already favorited
-    const isFavorited = await profileRepository.checkFavoriteUniversity(userId, universityId);
+    const isFavorited = await profileRepository.checkFavoriteUniversity(
+      userId,
+      universityId
+    );
     if (isFavorited) {
       throw new Error("University is already in favorites");
     }
@@ -167,12 +171,18 @@ class ProfileService {
    */
   async addFavoriteScholarship(userId: number, scholarshipId: string) {
     // Check if already favorited
-    const isFavorited = await profileRepository.checkFavoriteScholarship(userId, scholarshipId);
+    const isFavorited = await profileRepository.checkFavoriteScholarship(
+      userId,
+      scholarshipId
+    );
     if (isFavorited) {
       throw new Error("Scholarship is already in favorites");
     }
 
-    return await profileRepository.addFavoriteScholarship(userId, scholarshipId);
+    return await profileRepository.addFavoriteScholarship(
+      userId,
+      scholarshipId
+    );
   }
 
   /**
@@ -193,14 +203,20 @@ class ProfileService {
    * Check if university is favorited
    */
   async checkFavoriteUniversity(userId: number, universityId: string) {
-    return await profileRepository.checkFavoriteUniversity(userId, universityId);
+    return await profileRepository.checkFavoriteUniversity(
+      userId,
+      universityId
+    );
   }
 
   /**
    * Check if scholarship is favorited
    */
   async checkFavoriteScholarship(userId: number, scholarshipId: string) {
-    return await profileRepository.checkFavoriteScholarship(userId, scholarshipId);
+    return await profileRepository.checkFavoriteScholarship(
+      userId,
+      scholarshipId
+    );
   }
 
   /**

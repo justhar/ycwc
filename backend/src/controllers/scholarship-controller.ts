@@ -71,9 +71,7 @@ export class ScholarshipController {
   async searchScholarships(c: Context) {
     try {
       const searchTerm = c.req.query("q") || "";
-      const limit = c.req.query("limit")
-        ? parseInt(c.req.query("limit")!)
-        : 10;
+      const limit = c.req.query("limit") ? parseInt(c.req.query("limit")!) : 10;
 
       const scholarships = await scholarshipService.searchScholarships(
         searchTerm,

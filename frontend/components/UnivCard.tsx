@@ -247,15 +247,17 @@ export default function UnivCard({
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {(university.specialties || []).slice(0, 3).map((specialty) => (
-                      <Badge
-                        key={specialty}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {specialty}
-                      </Badge>
-                    ))}
+                    {(university.specialties || [])
+                      .slice(0, 3)
+                      .map((specialty) => (
+                        <Badge
+                          key={specialty}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {specialty}
+                        </Badge>
+                      ))}
                     {(university.specialties?.length || 0) > 3 && (
                       <Badge variant="secondary" className="text-xs">
                         +{(university.specialties?.length || 0) - 3} more

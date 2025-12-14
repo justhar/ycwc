@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { SelectContent, SelectItem } from "@/components/ui/select";
 import { SquarePen } from "lucide-react";
 import { ControlledInput, ControlledSelect } from "./index";
 
@@ -87,7 +84,9 @@ export function AcademicSection({
                 <div className="flex gap-2">
                   <ControlledInput
                     value={profileData.academicScore}
-                    onUpdate={(value) => onProfileChange("academicScore", value)}
+                    onUpdate={(value) =>
+                      onProfileChange("academicScore", value)
+                    }
                     placeholder="3.45 or 85"
                   />
                   <ControlledSelect
@@ -97,7 +96,9 @@ export function AcademicSection({
                   >
                     <SelectContent>
                       <SelectItem value="gpa4">{t("gpa4")}</SelectItem>
-                      <SelectItem value="percentage">{t("percentage")}</SelectItem>
+                      <SelectItem value="percentage">
+                        {t("percentage")}
+                      </SelectItem>
                       <SelectItem value="indo">{t("indoScale")}</SelectItem>
                     </SelectContent>
                   </ControlledSelect>

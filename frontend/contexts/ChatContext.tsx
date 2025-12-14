@@ -137,7 +137,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       content: message,
       createdAt: new Date().toISOString(),
     };
-    
+
     // Add typing indicator (temporary AI message showing it's thinking)
     const typingMessage: ChatMessage = {
       id: `typing-${Date.now()}`,
@@ -158,12 +158,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           (msg) => msg.id !== tempUserMessage.id && msg.id !== typingMessage.id
         );
         const messagesToAdd = [response.userMessage];
-        
+
         // Add AI message if it exists (AI response generated)
         if (response.aiMessage) {
           messagesToAdd.push(response.aiMessage);
         }
-        
+
         return [...filtered, ...messagesToAdd];
       });
 

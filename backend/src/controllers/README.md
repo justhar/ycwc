@@ -30,6 +30,7 @@ Routes → **Controllers** → Services → Repositories → Database
 ```
 
 **Controllers are responsible for:**
+
 - Extracting data from HTTP requests (body, params, query, headers)
 - Calling service methods with extracted data
 - Handling service errors and mapping to appropriate HTTP status codes
@@ -38,6 +39,7 @@ Routes → **Controllers** → Services → Repositories → Database
 - HTTP-specific concerns (status codes, headers)
 
 **Controllers should NOT:**
+
 - Contain business logic (that's in services)
 - Execute database queries directly (use services/repositories)
 - Perform complex validation (services handle that)
@@ -47,28 +49,28 @@ Routes → **Controllers** → Services → Repositories → Database
 ### Importing Controllers
 
 ```typescript
-import { authController, taskController } from '../controllers';
+import { authController, taskController } from "../controllers";
 ```
 
 ### Example: Using in a Route
 
 ```typescript
-import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth';
-import { taskController } from '../controllers';
+import { Hono } from "hono";
+import { authMiddleware } from "../middleware/auth";
+import { taskController } from "../controllers";
 
 const router = new Hono();
 
 // Public routes
-router.post('/register', (c) => authController.register(c));
-router.post('/login', (c) => authController.login(c));
+router.post("/register", (c) => authController.register(c));
+router.post("/login", (c) => authController.login(c));
 
 // Protected routes
-router.use('*', authMiddleware);
-router.get('/tasks', (c) => taskController.getTasks(c));
-router.post('/tasks', (c) => taskController.createTask(c));
-router.put('/tasks/:id', (c) => taskController.updateTask(c));
-router.delete('/tasks/:id', (c) => taskController.deleteTask(c));
+router.use("*", authMiddleware);
+router.get("/tasks", (c) => taskController.getTasks(c));
+router.post("/tasks", (c) => taskController.createTask(c));
+router.put("/tasks/:id", (c) => taskController.updateTask(c));
+router.delete("/tasks/:id", (c) => taskController.deleteTask(c));
 
 export default router;
 ```
@@ -85,7 +87,7 @@ async createTask(c: Context) {
   const body = await c.req.json();             // Request body
   const taskId = c.req.param('id');            // URL parameter
   const lang = c.req.query('lang') || 'en';    // Query parameter
-  
+
   // Call service...
 }
 ```
@@ -97,9 +99,9 @@ async getTask(c: Context) {
   try {
     const userId = c.get('userId');
     const taskId = c.req.param('id');
-    
+
     const task = await taskService.getTaskById(taskId, userId);
-    
+
     return c.json({ task });
   } catch (error: any) {
     const status = error.message.includes('not found') ? 404 : 500;
@@ -116,7 +118,7 @@ Controllers map service errors to appropriate HTTP status codes:
 catch (error: any) {
   // Determine appropriate status code
   let status = 500;
-  
+
   if (error.message.includes('not found')) {
     status = 404;
   } else if (error.message.includes('Unauthorized')) {
@@ -124,7 +126,7 @@ catch (error: any) {
   } else if (error.message.includes('required') || error.message.includes('invalid')) {
     status = 400;
   }
-  
+
   return c.json({ error: error.message }, status);
 }
 ```
@@ -139,9 +141,9 @@ async createTask(c: Context) {
     const userId = c.get('userId');
     const body = await c.req.json();
     const lang = c.req.query('lang') || 'en';
-    
+
     const task = await taskService.createTask(userId, body);
-    
+
     return c.json({
       message: i18n.t('task.createSuccess', lang),
       task,
@@ -163,8 +165,8 @@ async getUniversities(c: Context) {
   const params = {
     country: c.req.query('country'),
     type: c.req.query('type') as 'public' | 'private' | undefined,
-    minRanking: c.req.query('minRanking') 
-      ? parseInt(c.req.query('minRanking')!) 
+    minRanking: c.req.query('minRanking')
+      ? parseInt(c.req.query('minRanking')!)
       : undefined,
     maxRanking: c.req.query('maxRanking')
       ? parseInt(c.req.query('maxRanking')!)
@@ -172,9 +174,9 @@ async getUniversities(c: Context) {
     page: c.req.query('page') ? parseInt(c.req.query('page')!) : 1,
     limit: c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20,
   };
-  
+
   const universities = await universityService.getAllUniversities(params);
-  
+
   return c.json({ universities });
 }
 ```
@@ -182,21 +184,25 @@ async getUniversities(c: Context) {
 ## HTTP Status Codes Used
 
 ### Success Codes
+
 - **200 OK** - Successful GET, PUT, PATCH, DELETE requests
 - **201 Created** - Successful POST requests that create resources
 
 ### Client Error Codes
+
 - **400 Bad Request** - Invalid input, validation errors
 - **401 Unauthorized** - Authentication failed (invalid credentials)
 - **403 Forbidden** - User not authorized to access resource (ownership check failed)
 - **404 Not Found** - Resource does not exist
 
 ### Server Error Codes
+
 - **500 Internal Server Error** - Unexpected server errors
 
 ## Response Format
 
 ### Success Response
+
 ```json
 {
   "message": "Task created successfully",
@@ -205,6 +211,7 @@ async getUniversities(c: Context) {
 ```
 
 ### Error Response
+
 ```json
 {
   "error": "Task title is required"
@@ -212,6 +219,7 @@ async getUniversities(c: Context) {
 ```
 
 ### List Response
+
 ```json
 {
   "tasks": [ ... ]
@@ -221,6 +229,7 @@ async getUniversities(c: Context) {
 ## Common Controller Methods
 
 ### CRUD Operations
+
 - `get{Resource}s()` - List all resources
 - `get{Resource}()` - Get single resource by ID
 - `create{Resource}()` - Create new resource
@@ -228,6 +237,7 @@ async getUniversities(c: Context) {
 - `delete{Resource}()` - Delete resource
 
 ### Special Operations
+
 - `search{Resource}s()` - Search resources by query
 - `addToFavorites()` - Add resource to user favorites
 - `removeFromFavorites()` - Remove from favorites
@@ -237,6 +247,7 @@ async getUniversities(c: Context) {
 ## Testing Controllers
 
 Controllers can be tested by:
+
 1. Mocking the Hono Context object
 2. Mocking service layer methods
 3. Verifying correct service calls
@@ -248,19 +259,19 @@ Routes define paths and HTTP methods, then delegate to controllers:
 
 ```typescript
 // routes/tasks.ts
-import { Hono } from 'hono';
-import { taskController } from '../controllers';
-import { authMiddleware } from '../middleware/auth';
+import { Hono } from "hono";
+import { taskController } from "../controllers";
+import { authMiddleware } from "../middleware/auth";
 
 const router = new Hono();
 
-router.use('*', authMiddleware);
+router.use("*", authMiddleware);
 
-router.get('/', (c) => taskController.getTasks(c));
-router.get('/:id', (c) => taskController.getTask(c));
-router.post('/', (c) => taskController.createTask(c));
-router.put('/:id', (c) => taskController.updateTask(c));
-router.delete('/:id', (c) => taskController.deleteTask(c));
+router.get("/", (c) => taskController.getTasks(c));
+router.get("/:id", (c) => taskController.getTask(c));
+router.post("/", (c) => taskController.createTask(c));
+router.put("/:id", (c) => taskController.updateTask(c));
+router.delete("/:id", (c) => taskController.deleteTask(c));
 
 export default router;
 ```
@@ -270,12 +281,14 @@ This keeps route files minimal and focused on path definitions, with all logic i
 ## Next Steps
 
 Now that the Controllers layer is complete, the existing routes need to be refactored to use these controllers instead of handling logic directly. This will:
+
 - Reduce code duplication
 - Improve testability
 - Maintain consistent error handling
 - Enable easier maintenance
 
 The refactored architecture will be:
+
 ```
 Routes (thin path definitions) → Controllers (HTTP logic) → Services (business logic) → Repositories (data access) → Database
 ```

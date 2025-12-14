@@ -19,7 +19,7 @@ class TaskGroupService {
    */
   async getGroupById(groupId: string, userId: number) {
     const group = await taskGroupRepository.findById(groupId, userId);
-    
+
     if (!group) {
       throw new Error("Task group not found");
     }
@@ -30,11 +30,14 @@ class TaskGroupService {
   /**
    * Create new task group
    */
-  async createGroup(userId: number, groupData: {
-    name: string;
-    color?: string;
-    description?: string;
-  }) {
+  async createGroup(
+    userId: number,
+    groupData: {
+      name: string;
+      color?: string;
+      description?: string;
+    }
+  ) {
     // Validate required fields
     if (!groupData.name || groupData.name.trim().length === 0) {
       throw new Error("Group name is required");
@@ -46,7 +49,9 @@ class TaskGroupService {
 
     // Validate color format if provided
     if (groupData.color && !this.isValidColor(groupData.color)) {
-      throw new Error("Invalid color format (use Tailwind classes like 'bg-blue-500')");
+      throw new Error(
+        "Invalid color format (use Tailwind classes like 'bg-blue-500')"
+      );
     }
 
     return await taskGroupRepository.create(userId, groupData);
@@ -55,7 +60,11 @@ class TaskGroupService {
   /**
    * Update task group
    */
-  async updateGroup(groupId: string, userId: number, updates: Partial<TaskGroup>) {
+  async updateGroup(
+    groupId: string,
+    userId: number,
+    updates: Partial<TaskGroup>
+  ) {
     // Verify group exists and user owns it
     await this.getGroupById(groupId, userId);
 
@@ -70,7 +79,9 @@ class TaskGroupService {
     }
 
     if (updates.color && !this.isValidColor(updates.color)) {
-      throw new Error("Invalid color format (use Tailwind classes like 'bg-blue-500')");
+      throw new Error(
+        "Invalid color format (use Tailwind classes like 'bg-blue-500')"
+      );
     }
 
     return await taskGroupRepository.update(groupId, userId, updates);
@@ -91,9 +102,10 @@ class TaskGroupService {
    */
   private isValidColor(color: string): boolean {
     // Accept Tailwind color classes (bg-color-shade) or hex colors
-    const tailwindPattern = /^bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}$/;
+    const tailwindPattern =
+      /^bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}$/;
     const hexPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-    
+
     return tailwindPattern.test(color) || hexPattern.test(color);
   }
 }

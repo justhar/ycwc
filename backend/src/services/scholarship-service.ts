@@ -28,7 +28,7 @@ class ScholarshipService {
    */
   async getScholarshipById(scholarshipId: string) {
     const scholarship = await scholarshipRepository.findById(scholarshipId);
-    
+
     if (!scholarship) {
       throw new Error("Scholarship not found");
     }

@@ -14,6 +14,7 @@ export interface Subtask {
   description?: string | null;
   priority?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Task {
@@ -66,7 +67,10 @@ export interface GroupContextType {
   groups: TaskGroup[];
   loadGroups: (token: string) => Promise<void>;
   createGroup: (
-    groupData: Omit<TaskGroup, "id" | "userId" | "createdAt" | "updatedAt" | "taskCount">,
+    groupData: Omit<
+      TaskGroup,
+      "id" | "userId" | "createdAt" | "updatedAt" | "taskCount"
+    >,
     token: string
   ) => Promise<void>;
   updateGroup: (

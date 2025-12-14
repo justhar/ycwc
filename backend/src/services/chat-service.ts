@@ -22,7 +22,7 @@ class ChatService {
    */
   async getChatById(chatId: string, userId: number) {
     const chat = await chatRepository.findById(chatId, userId);
-    
+
     if (!chat) {
       throw new Error("Chat not found");
     }
@@ -52,7 +52,7 @@ class ChatService {
   async updateChat(chatId: string, userId: number, updates: Partial<Chat>) {
     // Verify chat exists and user owns it
     const chat = await chatRepository.findById(chatId, userId);
-    
+
     if (!chat) {
       throw new Error("Chat not found");
     }
@@ -76,7 +76,7 @@ class ChatService {
   async deleteChat(chatId: string, userId: number) {
     // Verify chat exists and user owns it
     const chat = await chatRepository.findById(chatId, userId);
-    
+
     if (!chat) {
       throw new Error("Chat not found");
     }
@@ -90,7 +90,7 @@ class ChatService {
   async getChatMessages(chatId: string, userId: number) {
     // Verify chat exists and user owns it
     const chat = await chatRepository.findById(chatId, userId);
-    
+
     if (!chat) {
       throw new Error("Chat not found");
     }
@@ -101,13 +101,17 @@ class ChatService {
   /**
    * Add message to chat and generate AI response
    */
-  async addMessage(chatId: string, userId: number, messageData: {
-    role: "user" | "assistant";
-    content: string;
-  }) {
+  async addMessage(
+    chatId: string,
+    userId: number,
+    messageData: {
+      role: "user" | "assistant";
+      content: string;
+    }
+  ) {
     // Verify chat exists and user owns it
     const chat = await chatRepository.findById(chatId, userId);
-    
+
     if (!chat) {
       throw new Error("Chat not found");
     }
@@ -141,15 +145,17 @@ class ChatService {
       try {
         // Get chat history for context
         const chatMessages = await chatRepository.findMessagesByChatId(chatId);
-        
+
         // Get user profile for context
         const userProfile = await profileRepository.findByUserId(userId);
-        
+
         // Get user's favorite universities for context
-        const favoriteUniversities = await universityRepository.findFavoritesByUserId(userId);
-        
+        const favoriteUniversities =
+          await universityRepository.findFavoritesByUserId(userId);
+
         // Get user's favorite scholarships for context
-        const favoriteScholarships = await universityRepository.findFavoriteScholarshipsByUserId(userId);
+        const favoriteScholarships =
+          await universityRepository.findFavoriteScholarshipsByUserId(userId);
 
         // Generate AI response
         const aiResponse = await aiService.generateChatResponse(
@@ -179,7 +185,10 @@ class ChatService {
         return {
           userMessage,
           aiMessage: null,
-          error: error instanceof Error ? error.message : "Failed to generate AI response",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate AI response",
         };
       }
     }
@@ -193,7 +202,7 @@ class ChatService {
   async deleteMessage(messageId: string, chatId: string, userId: number) {
     // Verify chat exists and user owns it
     const chat = await chatRepository.findById(chatId, userId);
-    
+
     if (!chat) {
       throw new Error("Chat not found");
     }

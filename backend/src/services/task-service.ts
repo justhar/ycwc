@@ -26,7 +26,7 @@ class TaskService {
    */
   async getTaskById(taskId: string, userId: number) {
     const task = await taskRepository.findById(taskId, userId);
-    
+
     if (!task) {
       throw new Error("Task not found");
     }
@@ -37,14 +37,17 @@ class TaskService {
   /**
    * Create new task
    */
-  async createTask(userId: number, taskData: {
-    title: string;
-    description?: string;
-    type?: string;
-    priority?: string;
-    deadline?: string;
-    groupIds?: string[];
-  }) {
+  async createTask(
+    userId: number,
+    taskData: {
+      title: string;
+      description?: string;
+      type?: string;
+      priority?: string;
+      deadline?: string;
+      groupIds?: string[];
+    }
+  ) {
     // Validate required fields
     if (!taskData.title || taskData.title.trim().length === 0) {
       throw new Error("Task title is required");
@@ -111,11 +114,17 @@ class TaskService {
   /**
    * Update task status
    */
-  async updateTaskStatus(taskId: string, userId: number, status: "todo" | "in_progress" | "completed") {
+  async updateTaskStatus(
+    taskId: string,
+    userId: number,
+    status: "todo" | "in_progress" | "completed"
+  ) {
     // Verify task exists and user owns it
     await this.getTaskById(taskId, userId);
 
-    return await taskRepository.update(taskId, userId, { status: status as any });
+    return await taskRepository.update(taskId, userId, {
+      status: status as any,
+    });
   }
 
   /**
@@ -131,11 +140,15 @@ class TaskService {
   /**
    * Create subtask
    */
-  async createSubtask(taskId: string, userId: number, subtaskData: {
-    title: string;
-    description?: string;
-    priority?: string;
-  }) {
+  async createSubtask(
+    taskId: string,
+    userId: number,
+    subtaskData: {
+      title: string;
+      description?: string;
+      priority?: string;
+    }
+  ) {
     // Verify task exists and user owns it
     await this.getTaskById(taskId, userId);
 
@@ -154,7 +167,12 @@ class TaskService {
   /**
    * Update subtask
    */
-  async updateSubtask(subtaskId: string, taskId: string, userId: number, updates: Partial<Subtask>) {
+  async updateSubtask(
+    subtaskId: string,
+    taskId: string,
+    userId: number,
+    updates: Partial<Subtask>
+  ) {
     // Verify task exists and user owns it
     await this.getTaskById(taskId, userId);
 
@@ -184,13 +202,17 @@ class TaskService {
   /**
    * Toggle subtask completion
    */
-  async toggleSubtaskComplete(subtaskId: string, taskId: string, userId: number) {
+  async toggleSubtaskComplete(
+    subtaskId: string,
+    taskId: string,
+    userId: number
+  ) {
     // Verify task exists and user owns it
     await this.getTaskById(taskId, userId);
 
     const taskSubtasks = await taskRepository.findSubtasksByTaskId(taskId);
-    const subtask = taskSubtasks.find(s => s.id === subtaskId);
-    
+    const subtask = taskSubtasks.find((s) => s.id === subtaskId);
+
     if (!subtask) {
       throw new Error("Subtask not found");
     }

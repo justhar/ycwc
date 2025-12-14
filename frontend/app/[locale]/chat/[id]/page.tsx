@@ -140,15 +140,16 @@ const ChatPageDetail = () => {
         // Replace temp messages with real ones
         setMessages((prev) => {
           console.log("Current messages before update:", prev);
-          
+
           const filtered = prev.filter(
-            (msg) => !msg.id.startsWith("temp-user-") && !msg.id.startsWith("typing-")
+            (msg) =>
+              !msg.id.startsWith("temp-user-") && !msg.id.startsWith("typing-")
           );
-          
+
           console.log("Filtered messages (temp removed):", filtered);
-          
+
           const messagesToAdd: ChatMessage[] = [];
-          
+
           // Always add user message if it exists
           if (response.userMessage) {
             // Ensure message has all required fields
@@ -156,33 +157,35 @@ const ChatPageDetail = () => {
               id: response.userMessage.id || `user-${Date.now()}`,
               role: "user",
               content: response.userMessage.content || "",
-              createdAt: response.userMessage.createdAt || new Date().toISOString(),
+              createdAt:
+                response.userMessage.createdAt || new Date().toISOString(),
             };
             messagesToAdd.push(userMsg);
             console.log("Added user message:", userMsg);
           }
-          
-          // Add AI message if it exists  
+
+          // Add AI message if it exists
           if (response.aiMessage) {
             const aiMsg: ChatMessage = {
               id: response.aiMessage.id || `ai-${Date.now()}`,
               role: "assistant",
               content: response.aiMessage.content || "",
-              createdAt: response.aiMessage.createdAt || new Date().toISOString(),
+              createdAt:
+                response.aiMessage.createdAt || new Date().toISOString(),
             };
             messagesToAdd.push(aiMsg);
             console.log("Added AI message:", aiMsg);
           }
-          
+
           if (messagesToAdd.length === 0) {
             console.warn("No valid messages to add from response");
             return prev;
           }
-          
+
           const updatedMessages = [...filtered, ...messagesToAdd];
           console.log("Final messages state:", updatedMessages);
           console.log("Message count:", updatedMessages.length);
-          
+
           return updatedMessages;
         });
       } catch (error) {
@@ -191,7 +194,8 @@ const ChatPageDetail = () => {
         // Remove the temp messages if it failed
         setMessages((prev) =>
           prev.filter(
-            (msg) => !msg.id.startsWith("temp-user-") && !msg.id.startsWith("typing-")
+            (msg) =>
+              !msg.id.startsWith("temp-user-") && !msg.id.startsWith("typing-")
           )
         );
       } finally {

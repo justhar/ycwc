@@ -27,25 +27,29 @@ export class UniversityController {
       const minAcceptanceRate = c.req.query("minAcceptanceRate");
       const maxAcceptanceRate = c.req.query("maxAcceptanceRate");
       const limit = c.req.query("limit") ? parseInt(c.req.query("limit")!) : 20;
-      const offset = c.req.query("offset") ? parseInt(c.req.query("offset")!) : 0;
+      const offset = c.req.query("offset")
+        ? parseInt(c.req.query("offset")!)
+        : 0;
 
       // If search term provided, use search endpoint
       if (search && search.trim().length > 0) {
-        const searchResults = await universityService.searchUniversitiesWithFilters(
-          search,
-          {
+        const searchResults =
+          await universityService.searchUniversitiesWithFilters(search, {
             country: country || undefined,
             type,
             minRanking,
             maxRanking,
             minTuition: minTuition ? parseFloat(minTuition) : undefined,
             maxTuition: maxTuition ? parseFloat(maxTuition) : undefined,
-            minAcceptanceRate: minAcceptanceRate ? parseFloat(minAcceptanceRate) : undefined,
-            maxAcceptanceRate: maxAcceptanceRate ? parseFloat(maxAcceptanceRate) : undefined,
+            minAcceptanceRate: minAcceptanceRate
+              ? parseFloat(minAcceptanceRate)
+              : undefined,
+            maxAcceptanceRate: maxAcceptanceRate
+              ? parseFloat(maxAcceptanceRate)
+              : undefined,
             limit,
             offset,
-          }
-        );
+          });
 
         const total = searchResults.total || 0;
         const currentPage = Math.floor(offset / limit) + 1;
@@ -73,8 +77,12 @@ export class UniversityController {
         maxRanking,
         minTuition: minTuition ? parseFloat(minTuition) : undefined,
         maxTuition: maxTuition ? parseFloat(maxTuition) : undefined,
-        minAcceptanceRate: minAcceptanceRate ? parseFloat(minAcceptanceRate) : undefined,
-        maxAcceptanceRate: maxAcceptanceRate ? parseFloat(maxAcceptanceRate) : undefined,
+        minAcceptanceRate: minAcceptanceRate
+          ? parseFloat(minAcceptanceRate)
+          : undefined,
+        maxAcceptanceRate: maxAcceptanceRate
+          ? parseFloat(maxAcceptanceRate)
+          : undefined,
         limit,
         offset,
       });
@@ -160,9 +168,7 @@ export class UniversityController {
   async searchUniversities(c: Context) {
     try {
       const searchTerm = c.req.query("q") || "";
-      const limit = c.req.query("limit")
-        ? parseInt(c.req.query("limit")!)
-        : 10;
+      const limit = c.req.query("limit") ? parseInt(c.req.query("limit")!) : 10;
 
       const universities = await universityService.searchUniversities(
         searchTerm,

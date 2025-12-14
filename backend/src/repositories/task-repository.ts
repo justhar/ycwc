@@ -6,7 +6,12 @@
 import { db } from "../db/db.js";
 import { tasks, subtasks } from "../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
-import type { Task, Subtask, TaskPriority, TaskStatus } from "../types/index.js";
+import type {
+  Task,
+  Subtask,
+  TaskPriority,
+  TaskStatus,
+} from "../types/index.js";
 
 export class TaskRepository {
   /**
@@ -47,13 +52,16 @@ export class TaskRepository {
   /**
    * Create new task
    */
-  async create(userId: number, taskData: {
-    title: string;
-    priority: TaskPriority;
-    groupIds?: string[];
-    dueDate?: string | null;
-    notes?: string | null;
-  }) {
+  async create(
+    userId: number,
+    taskData: {
+      title: string;
+      priority: TaskPriority;
+      groupIds?: string[];
+      dueDate?: string | null;
+      notes?: string | null;
+    }
+  ) {
     const result = await db
       .insert(tasks)
       .values({
@@ -75,8 +83,15 @@ export class TaskRepository {
    */
   async update(taskId: string, userId: number, updates: Partial<Task>) {
     // Remove read-only fields
-    const { id, userId: _, createdAt, updatedAt, subtasks, ...updateData } = updates as any;
-    
+    const {
+      id,
+      userId: _,
+      createdAt,
+      updatedAt,
+      subtasks,
+      ...updateData
+    } = updates as any;
+
     const result = await db
       .update(tasks)
       .set(updateData)
@@ -109,11 +124,14 @@ export class TaskRepository {
   /**
    * Create subtask
    */
-  async createSubtask(taskId: string, subtaskData: {
-    title: string;
-    description?: string;
-    priority?: string;
-  }) {
+  async createSubtask(
+    taskId: string,
+    subtaskData: {
+      title: string;
+      description?: string;
+      priority?: string;
+    }
+  ) {
     const result = await db
       .insert(subtasks)
       .values({
@@ -121,7 +139,7 @@ export class TaskRepository {
         title: subtaskData.title.trim(),
         description: subtaskData.description?.trim() || null,
         priority: (subtaskData.priority || "medium") as any,
-        completed: false as any,
+        completed: false,
       })
       .returning();
 
@@ -134,7 +152,7 @@ export class TaskRepository {
   async updateSubtask(subtaskId: string, updates: Partial<Subtask>) {
     // Remove read-only fields
     const { id, taskId, createdAt, ...updateData } = updates as any;
-    
+
     const result = await db
       .update(subtasks)
       .set(updateData)

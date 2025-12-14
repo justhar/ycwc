@@ -63,8 +63,15 @@ export class ChatRepository {
    */
   async update(chatId: string, userId: number, updates: Partial<Chat>) {
     // Remove read-only fields
-    const { id, userId: _, createdAt, updatedAt, messages, ...updateData } = updates as any;
-    
+    const {
+      id,
+      userId: _,
+      createdAt,
+      updatedAt,
+      messages,
+      ...updateData
+    } = updates as any;
+
     const result = await db
       .update(chats)
       .set(updateData)
@@ -140,11 +147,16 @@ export class ChatRepository {
   /**
    * Update chat title from first message
    */
-  async updateTitleFromMessage(chatId: string, userId: number, messageContent: string) {
+  async updateTitleFromMessage(
+    chatId: string,
+    userId: number,
+    messageContent: string
+  ) {
     // Generate title from first 50 characters of message
-    const title = messageContent.length > 50 
-      ? messageContent.substring(0, 50) + "..."
-      : messageContent;
+    const title =
+      messageContent.length > 50
+        ? messageContent.substring(0, 50) + "..."
+        : messageContent;
 
     await this.update(chatId, userId, { title });
   }

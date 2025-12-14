@@ -18,12 +18,7 @@ This folder contains all TypeScript type definitions used across the frontend ap
 Import types from the central index:
 
 ```typescript
-import type {
-  User,
-  ProfileData,
-  Task,
-  ChatContextType,
-} from "@/types";
+import type { User, ProfileData, Task, ChatContextType } from "@/types";
 ```
 
 Or import from specific files:
@@ -35,17 +30,23 @@ import type { LoginCredentials, AuthContextType } from "@/types/auth";
 ## Type Categories
 
 ### Context Types
+
 Types ending with `ContextType` define React Context interfaces:
+
 - `AuthContextType` - Authentication context
 - `ChatContextType` - Chat context
 - `GroupContextType` - Task groups context
 
 ### Data Types
+
 Core data structures matching backend entities:
+
 - `ProfileData`, `Task`, `University`, `Scholarship`, `Chat`
 
 ### Request/Response Types
+
 API interaction types:
+
 - `APIResponse<T>` - Generic API response wrapper
 - `MatchingResponse` - University matching results
 - `PaginatedResponse<T>` - Paginated data responses

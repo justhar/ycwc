@@ -302,27 +302,31 @@ export default function SearchPage() {
 
         // Set universities and pagination
         setUniversities(universityData.universities || []);
-        setUniversityPagination(universityData.pagination || {
-          total: 0,
-          limit: 20,
-          offset: 0,
-          totalPages: 0,
-          currentPage: 1,
-          hasNext: false,
-          hasPrev: false,
-        });
+        setUniversityPagination(
+          universityData.pagination || {
+            total: 0,
+            limit: 20,
+            offset: 0,
+            totalPages: 0,
+            currentPage: 1,
+            hasNext: false,
+            hasPrev: false,
+          }
+        );
 
         // Set scholarships and pagination
         setScholarships(scholarshipData.scholarships || []);
-        setScholarshipPagination(scholarshipData.pagination || {
-          total: 0,
-          limit: 20,
-          offset: 0,
-          totalPages: 0,
-          currentPage: 1,
-          hasNext: false,
-          hasPrev: false,
-        });
+        setScholarshipPagination(
+          scholarshipData.pagination || {
+            total: 0,
+            limit: 20,
+            offset: 0,
+            totalPages: 0,
+            currentPage: 1,
+            hasNext: false,
+            hasPrev: false,
+          }
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
         console.error("Error fetching data on mount:", err);
@@ -484,15 +488,17 @@ export default function SearchPage() {
         });
 
         setUniversities(data.universities || []);
-        setUniversityPagination(data.pagination || {
-          total: 0,
-          limit: 20,
-          offset: 0,
-          totalPages: 0,
-          currentPage: 1,
-          hasNext: false,
-          hasPrev: false,
-        });
+        setUniversityPagination(
+          data.pagination || {
+            total: 0,
+            limit: 20,
+            offset: 0,
+            totalPages: 0,
+            currentPage: 1,
+            hasNext: false,
+            hasPrev: false,
+          }
+        );
       } else if (activeTab === "scholarships") {
         const data = await fetchScholarships({
           search: searchTerm || undefined,
@@ -503,15 +509,17 @@ export default function SearchPage() {
         });
 
         setScholarships(data.scholarships || []);
-        setScholarshipPagination(data.pagination || {
-          total: 0,
-          limit: 20,
-          offset: 0,
-          totalPages: 0,
-          currentPage: 1,
-          hasNext: false,
-          hasPrev: false,
-        });
+        setScholarshipPagination(
+          data.pagination || {
+            total: 0,
+            limit: 20,
+            offset: 0,
+            totalPages: 0,
+            currentPage: 1,
+            hasNext: false,
+            hasPrev: false,
+          }
+        );
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data");
@@ -583,15 +591,17 @@ export default function SearchPage() {
       });
 
       setUniversities(data.universities || []);
-      setUniversityPagination(data.pagination || {
-        total: 0,
-        limit: 20,
-        offset: 0,
-        totalPages: 0,
-        currentPage: 1,
-        hasNext: false,
-        hasPrev: false,
-      });
+      setUniversityPagination(
+        data.pagination || {
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        }
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch universities"
@@ -634,15 +644,17 @@ export default function SearchPage() {
       });
 
       setScholarships(data.scholarships || []);
-      setScholarshipPagination(data.pagination || {
-        total: 0,
-        limit: 20,
-        offset: 0,
-        totalPages: 0,
-        currentPage: 1,
-        hasNext: false,
-        hasPrev: false,
-      });
+      setScholarshipPagination(
+        data.pagination || {
+          total: 0,
+          limit: 20,
+          offset: 0,
+          totalPages: 0,
+          currentPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        }
+      );
 
       // Reload scholarship favorites to ensure accurate state
       if (token) {

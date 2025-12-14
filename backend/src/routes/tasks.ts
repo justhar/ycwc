@@ -19,7 +19,11 @@ app.patch("/:id/status", (c) => taskController.updateTaskStatus(c));
 app.get("/:id/subtasks", (c) => taskController.getSubtasks(c));
 app.post("/:id/subtasks", (c) => taskController.createSubtask(c));
 app.put("/:taskId/subtasks/:subtaskId", (c) => taskController.updateSubtask(c));
-app.delete("/:taskId/subtasks/:subtaskId", (c) => taskController.deleteSubtask(c));
-app.patch("/:taskId/subtasks/:subtaskId/toggle", (c) => taskController.toggleSubtask(c));
+app.delete("/:taskId/subtasks/:subtaskId", (c) =>
+  taskController.deleteSubtask(c)
+);
+app.patch("/:taskId/subtasks/:subtaskId/toggle", (c) =>
+  taskController.toggleSubtask(c)
+);
 
 export default app;

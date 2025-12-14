@@ -417,9 +417,13 @@ AVAILABLE UNIVERSITIES:
 ${JSON.stringify(universitiesForAI, null, 2)}
 
 CRITICAL INSTRUCTIONS:
-1. EXCLUDE any universities from ${userProfile.nationality || "the student's origin country"}. Only suggest universities outside the student's origin country.
+1. EXCLUDE any universities from ${
+        userProfile.nationality || "the student's origin country"
+      }. Only suggest universities outside the student's origin country.
 2. Only include universities that match the student's intended major and academic profile.
-3. Prioritize universities in or near the intended study abroad country (${userProfile.intendedCountry || "any country"}).
+3. Prioritize universities in or near the intended study abroad country (${
+        userProfile.intendedCountry || "any country"
+      }).
 
 TASK:
 1. Analyze each available university and calculate a match score (0-100) based on academic fit, program alignment, cultural/geographic fit, financial fit, and admission probability.

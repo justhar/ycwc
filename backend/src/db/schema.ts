@@ -10,6 +10,7 @@ import {
   pgEnum,
   decimal,
   uuid,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // Enums for user profile
@@ -301,7 +302,7 @@ export const subtasks = pgTable("subtasks", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   priority: subtaskPriorityEnum("priority").default("medium").notNull(),
-  completed: json("completed").$type<boolean>().default(false).notNull(),
+  completed: boolean("completed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

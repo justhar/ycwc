@@ -151,7 +151,7 @@ export default function MatchResultsPage() {
           // On success, reload to ensure sync
           const userFavorites = await getUserFavorites(token);
           setFavorites(userFavorites);
-          
+
           // Rebuild favoriteIds from backend response to ensure accuracy
           const favoriteIdsSet = new Set<string>();
           userFavorites.forEach((fav: any) => {
@@ -355,9 +355,11 @@ export default function MatchResultsPage() {
                   // Convert SuggestedUniversity to University format for UnivCard
                   // Use actual database ID if available (for inserted universities)
                   const universityForCard = {
-                    id: uni.id || `ai-suggested-${uni.name
-                      .replace(/\s+/g, "-")
-                      .toLowerCase()}`,
+                    id:
+                      uni.id ||
+                      `ai-suggested-${uni.name
+                        .replace(/\s+/g, "-")
+                        .toLowerCase()}`,
                     name: uni.name,
                     location: uni.location,
                     country: uni.country,

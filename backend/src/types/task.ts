@@ -10,8 +10,11 @@ export interface Subtask {
   id: string;
   taskId: string;
   title: string;
+  description?: string | null;
+  priority?: string;
   completed: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Task {

@@ -295,7 +295,7 @@ export const getScholarshipFavorites = async (
 
 // TASK API FUNCTIONS
 export const getTasks = async (token: string): Promise<Task[]> => {
-  const response = await fetch(`${API_BASE_URL}/tasks`, {
+  const response = await fetch(`${API_BASE_URL}/tasks?withSubtasks=true`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -393,7 +393,9 @@ export const createSubtask = async (
     throw new Error(errorData.error || "Failed to create subtask");
   }
 
-  return response.json();
+  const data = await response.json();
+  // Handle both nested response { subtask } and direct subtask response
+  return data.subtask || data;
 };
 
 export const updateSubtask = async (
@@ -419,7 +421,9 @@ export const updateSubtask = async (
     throw new Error(errorData.error || "Failed to update subtask");
   }
 
-  return response.json();
+  const data = await response.json();
+  // Handle both nested response { subtask } and direct subtask response
+  return data.subtask || data;
 };
 
 export const deleteSubtask = async (
@@ -650,9 +654,9 @@ export const sendChatMessage = async (
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       content: message,
-      role: "user"
+      role: "user",
     }),
   });
 

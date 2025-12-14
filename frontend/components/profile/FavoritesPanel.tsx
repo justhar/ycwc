@@ -51,17 +51,11 @@ export function FavoritesPanel({
 
       <Tabs defaultValue="universities" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger
-            value="universities"
-            className="flex items-center gap-2"
-          >
+          <TabsTrigger value="universities" className="flex items-center gap-2">
             <GraduationCap className="w-4 h-4" />
             {t("universities")} ({favorites.length})
           </TabsTrigger>
-          <TabsTrigger
-            value="scholarships"
-            className="flex items-center gap-2"
-          >
+          <TabsTrigger value="scholarships" className="flex items-center gap-2">
             <Star className="w-4 h-4" />
             {t("scholarships")} ({scholarshipFavorites.length})
           </TabsTrigger>
@@ -102,8 +96,7 @@ export function FavoritesPanel({
               <EmptyContent>
                 <Link href="/match">
                   <Button className="text-zinc-900 hover:bg-transparent cursor-pointer hover:shadow-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-                    {t("matchWithAI")}{" "}
-                    <Sparkles className="h-4 w-4 ml-2" />
+                    {t("matchWithAI")} <Sparkles className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
                 <p className="text-zinc-500">atau</p>
@@ -127,11 +120,11 @@ export function FavoritesPanel({
             </div>
           ) : scholarshipFavorites.length > 0 ? (
             <div className="gap-4 flex flex-col">
-              {scholarshipFavorites.map((scholarship) => (
+              {scholarshipFavorites.map((scholarshipFavorite) => (
                 <ScholarshipCard
-                  key={scholarship.id}
-                  scholarship={scholarship as any}
-                  savedItems={scholarshipFavorites.map((s) => s.id)}
+                  key={scholarshipFavorite.id}
+                  scholarship={scholarshipFavorite.scholarship as any}
+                  savedItems={scholarshipFavorites.map((s) => s.scholarshipId)}
                   onToggleSaved={onToggleScholarshipSaved}
                 />
               ))}

@@ -26,7 +26,11 @@ This folder contains all database query logic organized by domain entity. Each r
 Import repositories from the central index:
 
 ```typescript
-import { userRepository, profileRepository, taskRepository } from "../repositories/index.js";
+import {
+  userRepository,
+  profileRepository,
+  taskRepository,
+} from "../repositories/index.js";
 
 // Use repository methods
 const user = await userRepository.findById(userId);
@@ -53,16 +57,19 @@ const user = await userRepository.findByEmail(email);
 ## Common Patterns
 
 ### Find Operations
+
 - `findById(id)` - Find single record by primary key
 - `findByUserId(userId)` - Find records belonging to a user
 - `findAll(params)` - Find all with optional filters/pagination
 
 ### Write Operations
+
 - `create(data)` - Insert new record and return it
 - `update(id, updates)` - Update record and return updated version
 - `delete(id)` - Delete record
 
 ### Relational Operations
+
 - `findWithSubtasks(userId)` - Fetch parent with nested children
 - `addToFavorites(userId, itemId)` - Create many-to-many relationship
 - `removeFromFavorites(userId, itemId)` - Delete many-to-many relationship

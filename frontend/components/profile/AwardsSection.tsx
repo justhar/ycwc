@@ -12,10 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { SelectContent, SelectItem } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
 import { ControlledInput, ControlledSelect } from "./index";
 
@@ -118,7 +115,11 @@ export function AwardsSection({
                 </ControlledSelect>
               </div>
             </div>
-            <Button className="mt-4" onClick={onAddAward} disabled={profileLoading}>
+            <Button
+              className="mt-4"
+              onClick={onAddAward}
+              disabled={profileLoading}
+            >
               {profileLoading ? "Adding..." : "Add Award"}
             </Button>
           </DialogContent>

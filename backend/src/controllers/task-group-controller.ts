@@ -83,11 +83,7 @@ export class TaskGroupController {
       const groupId = c.req.param("id");
       const body = await c.req.json();
 
-      const group = await taskGroupService.updateGroup(
-        groupId,
-        userId,
-        body
-      );
+      const group = await taskGroupService.updateGroup(groupId, userId, body);
 
       return c.json(group);
     } catch (error: any) {

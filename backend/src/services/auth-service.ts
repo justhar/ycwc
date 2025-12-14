@@ -6,9 +6,15 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { userRepository } from "../repositories/index.js";
-import type { LoginRequest, RegisterRequest, AuthResponse, JWTPayload } from "../types/index.js";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  JWTPayload,
+} from "../types/index.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const SALT_ROUNDS = 10;
 
 class AuthService {

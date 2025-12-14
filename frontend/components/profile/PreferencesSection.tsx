@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { SelectContent, SelectItem } from "@/components/ui/select";
 import { SquarePen } from "lucide-react";
 import { ControlledInput, ControlledSelect } from "./index";
 
@@ -74,7 +71,9 @@ export function PreferencesSection({
                   placeholder={t("selectLevel")}
                 >
                   <SelectContent>
-                    <SelectItem value="undergraduate">{t("undergraduate")}</SelectItem>
+                    <SelectItem value="undergraduate">
+                      {t("undergraduate")}
+                    </SelectItem>
                     <SelectItem value="master">{t("masters")}</SelectItem>
                     <SelectItem value="phd">{t("phd")}</SelectItem>
                     <SelectItem value="exchange">{t("exchange")}</SelectItem>
@@ -97,7 +96,9 @@ export function PreferencesSection({
                 </Label>
                 <ControlledInput
                   value={profileData.intendedCountry}
-                  onUpdate={(value) => onProfileChange("intendedCountry", value)}
+                  onUpdate={(value) =>
+                    onProfileChange("intendedCountry", value)
+                  }
                   placeholder={t("unitedStates")}
                 />
               </div>
@@ -131,8 +132,7 @@ export function PreferencesSection({
       <Separator className="my-2" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
         <div>
-          <strong>Target Level:</strong>{" "}
-          {profileData.targetLevel || "Not set"}
+          <strong>Target Level:</strong> {profileData.targetLevel || "Not set"}
         </div>
         <div>
           <strong>Intended Major:</strong>{" "}

@@ -96,7 +96,7 @@ export default function ChatPage() {
     if (currentMessages.length === 0) return;
 
     const lastMessage = currentMessages[currentMessages.length - 1];
-    
+
     // If the last message is an AI response (not typing indicator) and we're not already animating it
     if (
       lastMessage.role === "assistant" &&
@@ -324,9 +324,9 @@ export default function ChatPage() {
                             : "bg-muted"
                         }`}
                       >
-                        {(loading ||
-                          (message.role === "assistant" &&
-                            message.content === "...")) ? (
+                        {loading ||
+                        (message.role === "assistant" &&
+                          message.content === "...") ? (
                           <div className="flex items-center space-x-1">
                             <div className="flex space-x-1">
                               <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>

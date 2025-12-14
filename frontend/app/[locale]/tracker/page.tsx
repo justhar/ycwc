@@ -331,7 +331,7 @@ export default function ApplicationTracker() {
   // Subtask management functions
   const handleCreateSubtask = async (
     taskId: string,
-    subtaskData: Omit<Subtask, "id">
+    subtaskData: Omit<Subtask, "id" | "taskId" | "createdAt" | "updatedAt">
   ) => {
     if (!token) return;
     try {
@@ -343,6 +343,17 @@ export default function ApplicationTracker() {
             : task
         )
       );
+      // Update selectedTask if it's the same task
+      if (selectedTask?.id === taskId) {
+        setSelectedTask((prev) =>
+          prev
+            ? {
+                ...prev,
+                subtasks: [...(prev.subtasks || []), newSubtask],
+              }
+            : null
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create subtask");
     }
@@ -373,6 +384,19 @@ export default function ApplicationTracker() {
             : task
         )
       );
+      // Update selectedTask if it's the same task
+      if (selectedTask?.id === taskId) {
+        setSelectedTask((prev) =>
+          prev
+            ? {
+                ...prev,
+                subtasks: prev.subtasks?.map((subtask: Subtask) =>
+                  subtask.id === subtaskId ? updatedSubtask : subtask
+                ),
+              }
+            : null
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update subtask");
     }
@@ -394,6 +418,19 @@ export default function ApplicationTracker() {
             : task
         )
       );
+      // Update selectedTask if it's the same task
+      if (selectedTask?.id === taskId) {
+        setSelectedTask((prev) =>
+          prev
+            ? {
+                ...prev,
+                subtasks: prev.subtasks?.filter(
+                  (subtask) => subtask.id !== subtaskId
+                ),
+              }
+            : null
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete subtask");
     }
@@ -570,13 +607,14 @@ export default function ApplicationTracker() {
     e.preventDefault();
     if (!selectedTask || !newSubtask.title.trim()) return;
 
-    const subtaskData: Omit<Subtask, "id"> = {
+    const subtaskData: Omit<
+      Subtask,
+      "id" | "taskId" | "createdAt" | "updatedAt"
+    > = {
       title: newSubtask.title,
-      description: newSubtask.description,
+      description: newSubtask.description || undefined,
       priority: newSubtask.priority,
       completed: false,
-      taskId: selectedTask.id,
-      createdAt: new Date().toISOString(),
     };
 
     handleCreateSubtask(selectedTask.id, subtaskData);
@@ -689,7 +727,8 @@ export default function ApplicationTracker() {
         saveProfileSnapshot(currentProfileSnapshot);
 
         // The response now has a 'recommendations' field with flat array of tasks
-        const recommendedTasks = (response as any).recommendations?.recommendations || [];
+        const recommendedTasks =
+          (response as any).recommendations?.recommendations || [];
 
         localStorage.setItem(
           "recommendationTasks",
@@ -986,40 +1025,36 @@ export default function ApplicationTracker() {
                                       }
                                       /{task.subtasks.length})
                                     </p>
-                                    {task.subtasks.map((subtask: Subtask) => (
-                                      <div
-                                        key={subtask.id}
-                                        className="flex items-center gap-2 text-xs"
-                                      >
-                                        <button
-                                          onClick={() =>
-                                            handleToggleSubtask(
-                                              task.id,
-                                              subtask.id
-                                            )
-                                          }
-                                          className={cn(
-                                            "w-3 h-3 rounded border flex items-center justify-center",
-                                            subtask.completed
-                                              ? "bg-green-500 border-green-500 text-white"
-                                              : "border-gray-300 hover:border-gray-400"
-                                          )}
+                                    {task.subtasks.map(
+                                      (subtask: Subtask, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center gap-2 text-xs"
                                         >
-                                          {subtask.completed && (
-                                            <CheckCircle2 className="w-2 h-2" />
-                                          )}
-                                        </button>
-                                        <span
-                                          className={cn(
-                                            "text-xs",
-                                            subtask.completed &&
-                                              "line-through opacity-60"
-                                          )}
-                                        >
-                                          {subtask.title}
-                                        </span>
-                                      </div>
-                                    ))}
+                                          <button
+                                            className={cn(
+                                              "w-3 h-3 rounded border flex items-center justify-center",
+                                              subtask.completed
+                                                ? "bg-green-500 border-green-500 text-white"
+                                                : "border-gray-300 hover:border-gray-400"
+                                            )}
+                                          >
+                                            {subtask.completed && (
+                                              <CheckCircle2 className="w-2 h-2" />
+                                            )}
+                                          </button>
+                                          <span
+                                            className={cn(
+                                              "text-xs",
+                                              subtask.completed &&
+                                                "line-through opacity-60"
+                                            )}
+                                          >
+                                            {subtask.title}
+                                          </span>
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -1106,8 +1141,13 @@ export default function ApplicationTracker() {
                           {groupTasks.map((task) => (
                             <div key={task.id}>
                               <div
-                                className="p-4 bg-card rounded-lg shadow-sm border hover:shadow-md transition-shadow "
-                                onClick={() => setSelectedTask(task)}
+                                className="p-4 bg-card rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+                                onClick={(e) => {
+                                  // Only open modal if clicking on the card itself, not on interactive elements
+                                  if (e.target === e.currentTarget) {
+                                    setSelectedTask(task);
+                                  }
+                                }}
                               >
                                 <div className="flex items-start gap-3">
                                   <div className="flex-1 min-w-0">
@@ -1153,21 +1193,23 @@ export default function ApplicationTracker() {
                                         <div className="flex items-center gap-1 flex-wrap">
                                           {task.groupIds &&
                                           task.groupIds.length > 0 ? (
-                                            task.groupIds.map((groupId: string) => {
-                                              const group = groups.find(
-                                                (g) => g.id === groupId
-                                              );
-                                              return group ? (
-                                                <Badge
-                                                  key={groupId}
-                                                  variant="secondary"
-                                                  className="text-xs cursor-pointer hover:bg-red-100 hover:text-red-700"
-                                                  title={`Remove from ${group.name}`}
-                                                >
-                                                  {group.name}
-                                                </Badge>
-                                              ) : null;
-                                            })
+                                            task.groupIds.map(
+                                              (groupId: string) => {
+                                                const group = groups.find(
+                                                  (g) => g.id === groupId
+                                                );
+                                                return group ? (
+                                                  <Badge
+                                                    key={groupId}
+                                                    variant="secondary"
+                                                    className="text-xs cursor-pointer hover:bg-red-100 hover:text-red-700"
+                                                    title={`Remove from ${group.name}`}
+                                                  >
+                                                    {group.name}
+                                                  </Badge>
+                                                ) : null;
+                                              }
+                                            )
                                           ) : (
                                             <span className="text-xs text-muted-foreground">
                                               No groups
@@ -1209,40 +1251,40 @@ export default function ApplicationTracker() {
                                             }
                                             /{task.subtasks.length})
                                           </p>
-                                          {task.subtasks.map((subtask: Subtask) => (
-                                            <div
-                                              key={subtask.id}
-                                              className="flex items-center gap-2 text-xs"
-                                            >
-                                              <button
-                                                onClick={() =>
-                                                  handleToggleSubtask(
-                                                    task.id,
-                                                    subtask.id
-                                                  )
-                                                }
-                                                className={cn(
-                                                  "w-3 h-3 rounded border flex items-center justify-center",
-                                                  subtask.completed
-                                                    ? "bg-green-500 border-green-500 text-white"
-                                                    : "border-gray-300 hover:border-gray-400"
-                                                )}
+                                          {task.subtasks.map(
+                                            (
+                                              subtask: Subtask,
+                                              index: number
+                                            ) => (
+                                              <div
+                                                key={index}
+                                                className="flex items-center gap-2 text-xs"
                                               >
-                                                {subtask.completed && (
-                                                  <CheckCircle2 className="w-2 h-2" />
-                                                )}
-                                              </button>
-                                              <span
-                                                className={cn(
-                                                  "text-xs",
-                                                  subtask.completed &&
-                                                    "line-through opacity-60"
-                                                )}
-                                              >
-                                                {subtask.title}
-                                              </span>
-                                            </div>
-                                          ))}
+                                                <button
+                                                  onClick={(e) => {}}
+                                                  className={cn(
+                                                    "w-3 h-3 rounded border flex items-center justify-center",
+                                                    subtask.completed
+                                                      ? "bg-green-500 border-green-500 text-white"
+                                                      : "border-gray-300 hover:border-gray-400"
+                                                  )}
+                                                >
+                                                  {subtask.completed && (
+                                                    <CheckCircle2 className="w-2 h-2" />
+                                                  )}
+                                                </button>
+                                                <span
+                                                  className={cn(
+                                                    "text-xs",
+                                                    subtask.completed &&
+                                                      "line-through opacity-60"
+                                                  )}
+                                                >
+                                                  {subtask.title}
+                                                </span>
+                                              </div>
+                                            )
+                                          )}
                                         </div>
                                       )}
                                   </div>
@@ -1527,7 +1569,9 @@ export default function ApplicationTracker() {
                           <Badge className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400">
                             MUST
                           </Badge>
-                          <span className="text-xs text-muted-foreground">Critical</span>
+                          <span className="text-xs text-muted-foreground">
+                            Critical
+                          </span>
                         </div>
                       </SelectItem>
                       <SelectItem value="NEED">
@@ -1535,7 +1579,9 @@ export default function ApplicationTracker() {
                           <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400">
                             NEED
                           </Badge>
-                          <span className="text-xs text-muted-foreground">Important</span>
+                          <span className="text-xs text-muted-foreground">
+                            Important
+                          </span>
                         </div>
                       </SelectItem>
                       <SelectItem value="NICE">
@@ -1543,7 +1589,9 @@ export default function ApplicationTracker() {
                           <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400">
                             NICE
                           </Badge>
-                          <span className="text-xs text-muted-foreground">Optional</span>
+                          <span className="text-xs text-muted-foreground">
+                            Optional
+                          </span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -1829,78 +1877,82 @@ export default function ApplicationTracker() {
 
                   {showSubtasks && (
                     <div className="space-y-3">
-                      {selectedTask.subtasks?.map((subtask: Subtask) => (
-                        <div
-                          key={subtask.id}
-                          className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"
-                        >
-                          <Checkbox
-                            checked={subtask.completed}
-                            onCheckedChange={(checked) =>
-                              handleToggleSubtask(selectedTask.id, subtask.id)
-                            }
-                            className="mt-0.5"
-                          />
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span
-                                className={`font-medium text-sm ${
-                                  subtask.completed
-                                    ? "line-through text-muted-foreground"
-                                    : ""
-                                }`}
-                              >
-                                {subtask.title}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {subtask.priority}
-                                </Badge>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <MoreHorizontal className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => handleEditSubtask(subtask)}
-                                    >
-                                      <Edit2 className="h-3 w-3 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        handleDeleteSubtask(
-                                          selectedTask.id,
-                                          subtask.id
-                                        )
-                                      }
-                                      className="text-destructive"
-                                    >
-                                      <Trash2 className="h-3 w-3 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                      {selectedTask.subtasks?.map(
+                        (subtask: Subtask, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"
+                          >
+                            <Checkbox
+                              checked={subtask.completed}
+                              onCheckedChange={(checked) =>
+                                handleToggleSubtask(selectedTask.id, subtask.id)
+                              }
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span
+                                  className={`font-medium text-sm ${
+                                    subtask.completed
+                                      ? "line-through text-muted-foreground"
+                                      : ""
+                                  }`}
+                                >
+                                  {subtask.title}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {subtask.priority}
+                                  </Badge>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <MoreHorizontal className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleEditSubtask(subtask)
+                                        }
+                                      >
+                                        <Edit2 className="h-3 w-3 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleDeleteSubtask(
+                                            selectedTask.id,
+                                            subtask.id
+                                          )
+                                        }
+                                        className="text-destructive"
+                                      >
+                                        <Trash2 className="h-3 w-3 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </div>
+                              {subtask.description && (
+                                <p
+                                  className={`text-xs text-muted-foreground ${
+                                    subtask.completed ? "line-through" : ""
+                                  }`}
+                                >
+                                  {subtask.description}
+                                </p>
+                              )}
                             </div>
-                            {subtask.description && (
-                              <p
-                                className={`text-xs text-muted-foreground ${
-                                  subtask.completed ? "line-through" : ""
-                                }`}
-                              >
-                                {subtask.description}
-                              </p>
-                            )}
                           </div>
-                        </div>
-                      )) || (
+                        )
+                      ) || (
                         <div className="text-center py-8">
                           <p className="text-sm text-muted-foreground">
                             No subtasks added yet
@@ -1912,6 +1964,101 @@ export default function ApplicationTracker() {
                       )}
                     </div>
                   )}
+
+                  {/* Edit Subtask Dialog */}
+                  <Dialog
+                    open={!!editingSubtask}
+                    onOpenChange={(open) => !open && setEditingSubtask(null)}
+                  >
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Edit Subtask</DialogTitle>
+                      </DialogHeader>
+                      {editingSubtask && (
+                        <form
+                          onSubmit={handleUpdateSubtaskSubmit}
+                          className="space-y-4"
+                        >
+                          <div>
+                            <Label
+                              htmlFor="edit-subtask-title"
+                              className="mb-2 block"
+                            >
+                              Title
+                            </Label>
+                            <Input
+                              id="edit-subtask-title"
+                              value={editingSubtask.title}
+                              onChange={(e) =>
+                                setEditingSubtask({
+                                  ...editingSubtask,
+                                  title: e.target.value,
+                                })
+                              }
+                              placeholder="Enter subtask title"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor="edit-subtask-description"
+                              className="mb-2 block"
+                            >
+                              Description (Optional)
+                            </Label>
+                            <Textarea
+                              id="edit-subtask-description"
+                              value={editingSubtask.description || ""}
+                              onChange={(e) =>
+                                setEditingSubtask({
+                                  ...editingSubtask,
+                                  description: e.target.value,
+                                })
+                              }
+                              placeholder="Enter subtask description"
+                              className="min-h-[80px]"
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor="edit-subtask-priority"
+                              className="mb-2 block"
+                            >
+                              Priority
+                            </Label>
+                            <Select
+                              value={editingSubtask.priority}
+                              onValueChange={(value) =>
+                                setEditingSubtask({
+                                  ...editingSubtask,
+                                  priority: value,
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setEditingSubtask(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit">Save Changes</Button>
+                          </div>
+                        </form>
+                      )}
+                    </DialogContent>
+                  </Dialog>
                 </div>
 
                 <div className="pt-4">
@@ -1927,85 +2074,6 @@ export default function ApplicationTracker() {
                   </Button>
                 </div>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Subtask Dialog */}
-        <Dialog
-          open={!!editingSubtask}
-          onOpenChange={() => setEditingSubtask(null)}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Subtask</DialogTitle>
-            </DialogHeader>
-            {editingSubtask && (
-              <form onSubmit={handleUpdateSubtaskSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="edit-subtask-title">Title</Label>
-                  <Input
-                    id="edit-subtask-title"
-                    value={editingSubtask.title}
-                    onChange={(e) =>
-                      setEditingSubtask({
-                        ...editingSubtask,
-                        title: e.target.value,
-                      })
-                    }
-                    placeholder="Enter subtask title"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-subtask-description">
-                    Description (Optional)
-                  </Label>
-                  <Textarea
-                    id="edit-subtask-description"
-                    value={editingSubtask.description || ""}
-                    onChange={(e) =>
-                      setEditingSubtask({
-                        ...editingSubtask,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Enter subtask description"
-                    className="min-h-[80px]"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-subtask-priority">Priority</Label>
-                  <Select
-                    value={editingSubtask.priority}
-                    onValueChange={(value) =>
-                      setEditingSubtask({
-                        ...editingSubtask,
-                        priority: value as "low" | "medium" | "high",
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingSubtask(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Update Subtask</Button>
-                </div>
-              </form>
             )}
           </DialogContent>
         </Dialog>

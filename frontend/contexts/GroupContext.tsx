@@ -22,7 +22,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   const createGroup = useCallback(
-    async (groupData: Omit<TaskGroup, "id" | "userId" | "createdAt" | "updatedAt" | "taskCount">, token: string) => {
+    async (
+      groupData: Omit<
+        TaskGroup,
+        "id" | "userId" | "createdAt" | "updatedAt" | "taskCount"
+      >,
+      token: string
+    ) => {
       setLoading(true);
       try {
         const newGroup = await createTaskGroup(token, groupData);
@@ -43,11 +49,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       try {
         const updatedGroup = await updateTaskGroup(token, groupId, updates);
         setGroups((prev) =>
-          prev.map((group) =>
-            group.id === groupId
-              ? updatedGroup
-              : group
-          )
+          prev.map((group) => (group.id === groupId ? updatedGroup : group))
         );
       } catch (error) {
         console.error("Failed to update group:", error);

@@ -4,7 +4,13 @@
  */
 
 import { db } from "../db/db.js";
-import { universities, userFavorites, scholarships, userScholarshipFavorites, universityScholarships } from "../db/schema.js";
+import {
+  universities,
+  userFavorites,
+  scholarships,
+  userScholarshipFavorites,
+  universityScholarships,
+} from "../db/schema.js";
 import { eq, and, sql, gte, lte, ilike, desc } from "drizzle-orm";
 import type { University, UniversitySearchParams } from "../types/index.js";
 
@@ -66,11 +72,15 @@ export class UniversityRepository {
     }
 
     if (params.minAcceptanceRate) {
-      conditions.push(gte(universities.acceptanceRate, params.minAcceptanceRate.toString()));
+      conditions.push(
+        gte(universities.acceptanceRate, params.minAcceptanceRate.toString())
+      );
     }
 
     if (params.maxAcceptanceRate) {
-      conditions.push(lte(universities.acceptanceRate, params.maxAcceptanceRate.toString()));
+      conditions.push(
+        lte(universities.acceptanceRate, params.maxAcceptanceRate.toString())
+      );
     }
 
     if (conditions.length > 0) {
@@ -120,11 +130,15 @@ export class UniversityRepository {
     }
 
     if (params.minAcceptanceRate) {
-      conditions.push(gte(universities.acceptanceRate, params.minAcceptanceRate.toString()));
+      conditions.push(
+        gte(universities.acceptanceRate, params.minAcceptanceRate.toString())
+      );
     }
 
     if (params.maxAcceptanceRate) {
-      conditions.push(lte(universities.acceptanceRate, params.maxAcceptanceRate.toString()));
+      conditions.push(
+        lte(universities.acceptanceRate, params.maxAcceptanceRate.toString())
+      );
     }
 
     // Get total count
@@ -217,7 +231,7 @@ export class UniversityRepository {
   async update(universityId: string, updates: Partial<University>) {
     // Remove read-only fields
     const { id, createdAt, updatedAt, ...updateData } = updates as any;
-    
+
     const result = await db
       .update(universities)
       .set(updateData)
@@ -327,7 +341,10 @@ export class UniversityRepository {
         createdAt: userScholarshipFavorites.createdAt,
       })
       .from(userScholarshipFavorites)
-      .innerJoin(scholarships, eq(userScholarshipFavorites.scholarshipId, scholarships.id))
+      .innerJoin(
+        scholarships,
+        eq(userScholarshipFavorites.scholarshipId, scholarships.id)
+      )
       .where(eq(userScholarshipFavorites.userId, userId))
       .orderBy(desc(userScholarshipFavorites.createdAt));
   }

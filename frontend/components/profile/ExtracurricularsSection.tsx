@@ -104,7 +104,11 @@ export function ExtracurricularsSection({
                 />
               </div>
             </div>
-            <Button className="mt-4" onClick={onAddActivity} disabled={profileLoading}>
+            <Button
+              className="mt-4"
+              onClick={onAddActivity}
+              disabled={profileLoading}
+            >
               {profileLoading ? "Adding..." : "Add Activity"}
             </Button>
           </DialogContent>
