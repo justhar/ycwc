@@ -3,7 +3,7 @@ import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
 
-export default function middleware(request: any) {
+export default function proxy(request: any) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for paths that should not be internationalized
